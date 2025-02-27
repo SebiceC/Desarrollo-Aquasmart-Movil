@@ -15,3 +15,23 @@ export const login = async (credentials) => {
     throw new Error(message);
   }
 };
+
+export const validateOtp = async (data) => {
+  try {
+    const response = await api.post("/users/validate-otp", data);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Token inválido");
+  }
+};
+
+export const resendOtp = async (document) => {
+  try {
+    const response = await api.post("/users/generate-otp", {
+      document: document,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Error al reenviar");
+  }
+};

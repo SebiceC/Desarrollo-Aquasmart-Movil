@@ -13,11 +13,10 @@ import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { login } from "../services/authService";
 
-// Esquema de validación
 const loginSchema = yup.object().shape({
   document: yup
     .string()
-    .matches(/^\d{1,12}$/, "Cédula inválida")
+    .matches(/^\d{6,12}$/, "Cédula inválida")
     .required("Campo obligatorio"),
   password: yup.string().required("Campo obligatorio"),
 });
@@ -32,21 +31,33 @@ export default function LoginScreen() {
     resolver: yupResolver(loginSchema),
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data) => {
-    console.log("Datos enviados", data);
+    console.log("[Login] Datos enviados:", data);
     setIsLoading(true);
+
     try {
-      const response = await login(data); // Llamada al backend
-      console.log("Servidor:", response);
+      const response = await login(data);
+      console.log("[Login] Respuesta del backend:", response);
+
       if (response.document) {
-        Alert.alert("Message", response.message);
+        navigation.navigate("TokenValidationScreen", {
+          document: response.document,
+          phone: response.phone,
+        });
       } else {
-        Alert.alert("Error", "Credenciales incorrectas");
+        Alert.alert(
+          "Error",
+          response.data.message || "Credenciales incorrectas"
+        );
       }
     } catch (error) {
-      console.error("Error completo:", error);
-      Alert.alert("Error", error.message);
+      console.error("[Login] Error completo:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Error de conexión"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -58,10 +69,9 @@ export default function LoginScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.contenedorPrincipal}>
-        {/* Título */}
         <Text style={styles.titulo}>INICIO DE SESIÓN</Text>
+
         <View style={styles.formulario}>
-          {/* Campo Cédula */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Cedula de Ciudadanía<Text style={{ color: "red" }}> *</Text>
@@ -72,7 +82,7 @@ export default function LoginScreen() {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingressa tu Cedula de Ciudadanía"
+                  placeholder="Ingresa tu Cedula de Ciudadanía"
                   placeholderTextColor="#A0AEC0"
                   keyboardType="numeric"
                   onChangeText={onChange}
@@ -80,50 +90,56 @@ export default function LoginScreen() {
                 />
               )}
             />
-            {errors.cedula && (
-              <Text style={styles.error}>{errors.cedula.message}</Text>
+            {errors.document && (
+              <Text style={styles.error}>{errors.document.message}</Text>
             )}
           </View>
 
-          {/* Campo Contraseña */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Contraseña<Text style={{ color: "red" }}> *</Text>
             </Text>
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingressa tu contraseña"
-                  placeholderTextColor="#A0AEC0"
-                  secureTextEntry
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
+            <View style={styles.passwordInputContainer}>
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="Ingresa tu contraseña"
+                    placeholderTextColor="#A0AEC0"
+                    secureTextEntry={!showPassword}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+              />
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Text style={styles.toggleText}>
+                  {showPassword ? "Ocultar" : "Mostrar"}
+                </Text>
+              </TouchableOpacity>
+            </View>
             {errors.password && (
               <Text style={styles.error}>{errors.password.message}</Text>
             )}
           </View>
         </View>
 
-        {/* Enlaces */}
         <View style={styles.enlacesContainer}>
           <TouchableOpacity
             onPress={() => navigation.navigate("RecoverPassword")}
           >
             <Text style={styles.enlace}>OLVIDE MI CONTRASEÑA</Text>
           </TouchableOpacity>
-
           <TouchableOpacity onPress={() => navigation.navigate("Register")}>
             <Text style={styles.enlace}>SOY USUARIO NUEVO</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Botón */}
         <TouchableOpacity
           style={styles.boton}
           onPress={handleSubmit(onSubmit)}
@@ -138,25 +154,19 @@ export default function LoginScreen() {
   );
 }
 
-// Estilos
 const styles = {
-  scrollContainer: {
-    flexGrow: 1,
-    backgroundColor: "#dcf2f1", // Fondo azul general
-    padding: 20,
-  },
-  contenedorPrincipal: {
-    backgroundColor: "#b7e1e7",
-    borderColor: "#7aa6c4",
-    borderRadius: 20, // Bordes redondeados
-    padding: 25,
-    elevation: 5,
-  },
   container: {
     flexGrow: 1,
     justifyContent: "center",
     backgroundColor: "#dcf2f1",
     padding: 24,
+  },
+  contenedorPrincipal: {
+    backgroundColor: "#b7e1e7",
+    borderColor: "#7aa6c4",
+    borderRadius: 20,
+    padding: 25,
+    elevation: 5,
   },
   titulo: {
     fontSize: 24,
@@ -165,7 +175,6 @@ const styles = {
     textAlign: "center",
     marginBottom: 40,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   inputContainer: {
     marginBottom: 24,
@@ -214,9 +223,34 @@ const styles = {
   },
   enlace: {
     color: "#2D3748",
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
     textDecorationLine: "underline",
+  },
+  passwordInputContainer: {
+    position: "relative",
+  },
+  passwordInput: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    fontSize: 16,
+    color: "#2D3748",
+    paddingRight: 70,
+  },
+  toggleButton: {
+    position: "absolute",
+    right: 10,
+    top: 12,
+    zIndex: 2,
+  },
+  toggleText: {
+    color: "#4299E1",
+    fontWeight: "600",
+    fontSize: 14,
   },
 };

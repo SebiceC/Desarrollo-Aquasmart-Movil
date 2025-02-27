@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://desarrollo-aquasmart-1zm8.onrender.com/api", // URL del backend
+  baseURL: "https://desarrollo-aquasmart-backend.onrender.com/api", // URL del backend
   headers: {
     "Content-Type": "application/json",
   },
