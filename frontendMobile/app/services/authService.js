@@ -11,8 +11,7 @@ export const login = async (credentials) => {
     }
 
     // Capturar mensajes del backend
-    const message = error.response.data?.message || "Error desconocido";
-    throw new Error(message);
+    console.log("[Login] Error completo:", error.response?.data);
   }
 };
 

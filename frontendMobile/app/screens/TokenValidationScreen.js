@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,21 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import api from "../services/api";
+import { Image } from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 export default function TokenValidationScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { document, phone } = route.params;
 
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(900);
   const [isResending, setIsResending] = useState(false);
+  const [showCustomAlert, setShowCustomAlert] = useState(false); // Estado para mostrar la alerta personalizada
+  const [alertMessage, setAlertMessage] = useState(""); // Estado para el mensaje de la alerta
+
+  const inputRefs = useRef([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -28,23 +34,25 @@ export default function TokenValidationScreen() {
   }, []);
 
   const handleSubmit = async () => {
-    console.log("[Token] Validando token:", token);
+    const tokenString = token.join("");
+    console.log("[Token] Validando token:", tokenString);
     try {
       const response = await api.post("/users/validate-otp", {
         document: document,
-        otp: token,
+        otp: tokenString,
       });
       console.log("[Token] Respuesta:", response.data);
 
       if (response.data.access) {
         Alert.alert("Éxito", "Validación exitosa");
         navigation.navigate("Home");
-      } else {
-        Alert.alert("Error", response.data.message || "Código inválido");
       }
     } catch (error) {
       console.error("[Token] Error:", error);
-      Alert.alert("Error", "Error al validar el código");
+      setAlertMessage(
+        error.response?.data?.message || "Código incorrecto"
+      );
+      setShowCustomAlert(true);
     }
   };
 
@@ -64,48 +72,92 @@ export default function TokenValidationScreen() {
     }
   };
 
+  const handleChange = (text, index) => {
+    const updatedToken = [...token];
+    updatedToken[index] = text.slice(0, 1);
+    setToken(updatedToken);
+
+    if (text.length === 1 && index < 5) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+
   return (
     <View style={styles.container}>
+      <View style={styles.logoContainer}>
+        <Image
+          source={require("../assets/img_M1/logo.png")}
+          style={styles.logo}
+        />
+        <Text style={styles.aquaSmartText}>AquaSmart</Text>
+      </View>
+
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.title}>INGRESO DE TOKEN</Text>
 
         <Text style={styles.subtitle}>
-          Introduce el token enviado por SMS a tu teléfono. Recuerde que expira
+          Introduce el token enviado por SMS a tu teléfono. Recuerda que expira
           en 15 minutos.
         </Text>
+
+        {/* Alerta personalizada debajo del título */}
+        {showCustomAlert && (
+          <View style={styles.customAlert}>
+            <Icon
+              name="warning"
+              size={20}
+              color="#757777"
+              style={styles.alertIcon}
+            />
+            <Text style={styles.alertText}>{alertMessage}</Text>
+            <Icon
+              name="warning"
+              size={20}
+              color="#656767"
+              style={styles.alertIcon}
+            />
+          </View>
+        )}
+
+        <View style={styles.tokenInputContainer}>
+          {token.map((digit, index) => (
+            <TextInput
+              key={index}
+              style={styles.tokenInput}
+              keyboardType="number-pad"
+              maxLength={1}
+              value={digit}
+              onChangeText={(text) => handleChange(text, index)}
+              ref={(ref) => (inputRefs.current[index] = ref)}
+              textAlign="center"
+            />
+          ))}
+        </View>
 
         <Text style={styles.timer}>
           {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}{" "}
           restantes
         </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Código de 6 dígitos"
-          placeholderTextColor="#A0AEC0"
-          keyboardType="number-pad"
-          maxLength={6}
-          value={token}
-          onChangeText={setToken}
-        />
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.resendButton}
+            onPress={handleResendToken}
+            disabled={isResending}
+          >
+            <Text style={styles.buttonText}>
+              {isResending ? "Enviando..." : "SOLICITAR NUEVO TOKEN"}
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit}
-          disabled={token.length !== 6}
-        >
-          <Text style={styles.buttonText}>ENVIAR</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.resendButton}
-          onPress={handleResendToken}
-          disabled={isResending}
-        >
-          <Text style={styles.resendText}>
-            {isResending ? "Enviando..." : "SOLICITAR NUEVO TOKEN"}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleSubmit}
+            disabled={token.some((digit) => digit === "")}
+          >
+            <Text style={styles.buttonText}>ENVIAR</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -119,59 +171,115 @@ const styles = StyleSheet.create({
     backgroundColor: "#dcf2f1",
   },
   contenedorPrincipal: {
-    backgroundColor: "#b7e1e7",
-    borderColor: "#7aa6c4",
-    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderColor: "#000000",
+    borderWidth: 1.5,
+    borderRadius: 12,
     padding: 25,
     elevation: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 20,
-    color: "#2D3748",
+    color: "#000000",
   },
   subtitle: {
     fontSize: 16,
     textAlign: "center",
     marginBottom: 30,
-    color: "#4A5568",
+    color: "#000000",
   },
   timer: {
     fontSize: 18,
     textAlign: "center",
-    color: "#E53E3E",
+    color: "#000000",
     marginBottom: 30,
   },
-  input: {
-    height: 50,
+  tokenInputContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 30,
+    borderRadius: 8,
+    borderColor: "#000000",
+  },
+  tokenInput: {
+    width: 50,
+    height: 70,
     backgroundColor: "#ffff",
-    borderColor: "#E2E8F0",
+    borderColor: "#000000",
     borderWidth: 1,
     borderRadius: 8,
-    padding: 15,
-    marginBottom: 30,
-    fontSize: 18,
     textAlign: "center",
+    fontSize: 18,
+  },
+
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
   },
   button: {
-    backgroundColor: "#4299E1",
-    padding: 15,
+    backgroundColor: "#2D5B7B",
+    paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",
-    marginBottom: 20,
+    flex: 1,
+    marginLeft: 10,
+    justifyContent: "center",
   },
   buttonText: {
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
+    textAlign: "center",
   },
   resendButton: {
+    backgroundColor: "#2D5B7B",
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    flex: 1,
+    marginRight: 10,
+    justifyContent: "center",
+  },
+
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 40,
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    marginRight: 20,
+  },
+  aquaSmartText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  customAlert: {
+    backgroundColor: "#FFA7A9",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
   },
-  resendText: {
-    color: "#4299E1",
-    fontWeight: "600",
+  alertText: {
+    color: "#757777",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginHorizontal: 10,
   },
-});
+  alertIcon: {
+    marginHorizontal: 5,
+  },
+})

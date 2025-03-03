@@ -1,6 +1,6 @@
 from django.core.mail import send_mail
 
-def send_email_recover(email, otp_generado):
+def send_sms_recover(email, otp_generado):
         """
         Envía un correo con el OTP de recuperación de contraseña.
         """

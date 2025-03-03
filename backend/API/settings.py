@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'iot',
-    'plots_lots',
+    'plots_lots'
     
 ]
 
@@ -183,7 +183,8 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 CORS_ALLOWED_ORIGINS = [
     "https://tu-frontend.com",
     "http://localhost:5173",  # Para desarrollo con React
-    "http://localhost:8081",  # Para desarrollo con Reac Native
+    "http://localhost:8081", # Para desarrollo con React Native con Expo
+    "exp://192.168.1.11:8081"
 ]
 
 # También puedes permitir todas las solicitudes (NO recomendado en producción)

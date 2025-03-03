@@ -10,131 +10,94 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
-import { login } from "../services/authService";
 import { Image } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
 
-const loginSchema = yup.object().shape({
+const PasswordChangeSchema = yup.object().shape({
   document: yup
     .string()
     .matches(/^\d{6,12}$/, "Cédula inválida")
     .required("Campo obligatorio"),
-  password: yup.string().required("Campo obligatorio"),
+  nuevaContraseña: yup
+    .string()
+    .min(8, "Mínimo 8 caracteres")
+    .max(20, "Máximo 20 caracteres")
+    .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
+    .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
+    .matches(/[0-9]/, "Debe contener al menos un número")
+    .matches(/[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/, "Debe contener al menos un carácter especial")
+    .required("Campo obligatorio"),
+  confirmarContraseña: yup
+    .string()
+    .oneOf([yup.ref("nuevaContraseña"), null], "Las contraseñas no coinciden")
+    .required("Campo obligatorio"),
 });
 
-export default function LoginScreen() {
+export default function PasswordChangeScreen() {
   const navigation = useNavigation();
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(loginSchema),
+    resolver: yupResolver(PasswordChangeSchema),
   });
+
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
-  const [showCustomAlert, setShowCustomAlert] = useState(false); // Estado para mostrar la alerta personalizada
-  const [alertMessage, setAlertMessage] = useState(""); // Estado para el mensaje de la alerta
+  const [buttonColor, setButtonColor] = useState("#365486"); 
+  const [showPasswordNueva, setShowPasswordNueva] = useState(false); 
+  const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false); 
 
   const onSubmit = async (data) => {
-    console.log("[Login] Datos enviados:", data);
+    console.log("[PasswordChange] Datos enviados:", data);
     setIsLoading(true);
 
     try {
-      const response = await login(data);
-      console.log("[Login] Respuesta del backend:", response);
+      const response = await PasswordChange(data);
+      console.log("[PasswordChange] Respuesta del backend:", response);
 
       if (response.document) {
         navigation.navigate("TokenValidationScreen", {
           document: response.document,
           phone: response.phone,
         });
+      } else {
+        console.log("Error al cambiar la contraseña");
       }
     } catch (error) {
-      console.error("[Login] Error completo:", error);
-      setAlertMessage(
-        error.response?.data?.message || "Credenciales incorrectas"
-      );
-      setShowCustomAlert(true); // Mostrar alerta
+      console.error("[PasswordChange] Error completo:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.logoContainer}>
         <Image
-          source={require("../assets/img_M1/logo.png")} // Ruta de la imagen
+          source={require('../assets/img_M1/logo.png')}
           style={styles.logo}
         />
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
       </View>
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.titulo}>INICIO DE SESIÓN</Text>
-
-        {/* Alerta personalizada debajo del título */}
-        {showCustomAlert && (
-          <View style={styles.customAlert}>
-            <Icon
-              name="warning"
-              size={20}
-              color="#757777"
-              style={styles.alertIcon}
-            />
-            <Text style={styles.alertText}>{alertMessage}</Text>
-            <Icon
-              name="warning"
-              size={20}
-              color="#656767"
-              style={styles.alertIcon}
-            />
-          </View>
-        )}
+        <Text style={styles.titulo}>CAMBIO DE CONTRASEÑA</Text>
 
         <View style={styles.formulario}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
-              Cedula de Ciudadanía<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Controller
-              control={control}
-              name="document"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingresa tu Cedula de Ciudadanía"
-                  placeholderTextColor="#A0AEC0"
-                  keyboardType="numeric"
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-            {errors.document && (
-              <Text style={styles.error}>{errors.document.message}</Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Contraseña<Text style={{ color: "red" }}> *</Text>
+              Nueva contraseña<Text style={{ color: "red" }}> *</Text>
             </Text>
             <View style={styles.passwordInputContainer}>
               <Controller
                 control={control}
-                name="password"
+                name="nuevaContraseña"
                 render={({ field: { onChange, value } }) => (
                   <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Ingresa tu contraseña"
+                    style={styles.input}
+                    placeholder="Ingresa la nueva contraseña"
                     placeholderTextColor="#A0AEC0"
-                    secureTextEntry={!showPassword}
+                    secureTextEntry={!showPasswordNueva}
                     onChangeText={onChange}
                     value={value}
                   />
@@ -142,30 +105,63 @@ export default function LoginScreen() {
               />
               <TouchableOpacity
                 style={styles.toggleButton}
-                onPress={() => setShowPassword(!showPassword)}
+                onPress={() => setShowPasswordNueva(!showPasswordNueva)}
               >
                 <Text style={styles.toggleText}>
-                  {showPassword ? "Ocultar" : "Mostrar"}
+                  {showPasswordNueva ? "Ocultar" : "Mostrar"}
                 </Text>
               </TouchableOpacity>
             </View>
-            {errors.password && (
-              <Text style={styles.error}>{errors.password.message}</Text>
+            {errors.nuevaContraseña && (
+              <Text style={styles.error}>{errors.nuevaContraseña.message}</Text>
+            )}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Confirmar contraseña<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <View style={styles.passwordInputContainer}>
+              <Controller
+                control={control}
+                name="confirmarContraseña"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirma la contraseña"
+                    placeholderTextColor="#A0AEC0"
+                    secureTextEntry={!showPasswordConfirmar}
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+              />
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setShowPasswordConfirmar(!showPasswordConfirmar)}
+              >
+                <Text style={styles.toggleText}>
+                  {showPasswordConfirmar ? "Ocultar" : "Mostrar"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {errors.confirmarContraseña && (
+              <Text style={styles.error}>{errors.confirmarContraseña.message}</Text>
             )}
           </View>
         </View>
 
-        <View style={styles.enlacesContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("RecoverPassword")}
-          >
-            <Text style={styles.enlace}>OLVIDE MI CONTRASEÑA</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={styles.enlace}>SOY USUARIO NUEVO</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.subtitle}>
+          {'\u2022'} Máximo 20 caracteres, mínimo 8 caracteres.
+          {'\n'}
+          {'\u2022'} Al menos una letra mayúscula.
+          {'\n'}
+          {'\u2022'} Al menos una letra minúscula.
+          {'\n'}
+          {'\u2022'} Al menos un número.
+          {'\n'}
+          {'\u2022'} Al menos un carácter especial (como @, #, $, etc.).
+        </Text>
 
         <TouchableOpacity
           style={[styles.boton, { backgroundColor: buttonColor }]}
@@ -175,7 +171,7 @@ export default function LoginScreen() {
           onPressOut={() => setButtonColor("#365486")}
         >
           <Text style={styles.botonTexto}>
-            {isLoading ? "CARGANDO..." : "INICIAR SESIÓN"}
+            {isLoading ? "CARGANDO..." : "GUARDAR CONTRASEÑA"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -205,6 +201,13 @@ const styles = {
     textAlign: "center",
     marginBottom: 40,
     textTransform: "uppercase",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#000000",
+    textAlign: "left", // Asegura que el texto esté alineado a la izquierda
+    marginBottom: 30,
+    lineHeight: 24, // Ajusta el espaciado entre las líneas
   },
   inputContainer: {
     marginBottom: 24,
@@ -249,42 +252,6 @@ const styles = {
     fontWeight: "700",
     textTransform: "uppercase",
   },
-  enlacesContainer: {
-    marginTop: 32,
-    gap: 16,
-  },
-  enlace: {
-    color: "#2D3748",
-    fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
-    textDecorationLine: "underline",
-  },
-  passwordInputContainer: {
-    position: "relative",
-  },
-  passwordInput: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    fontSize: 16,
-    color: "#2D3748",
-    paddingRight: 70,
-  },
-  toggleButton: {
-    position: "absolute",
-    right: 10,
-    top: 12,
-    zIndex: 2,
-  },
-  toggleText: {
-    color: "#4299E1",
-    fontWeight: "600",
-    fontSize: 14,
-  },
   logoContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -321,5 +288,19 @@ const styles = {
   },
   alertIcon: {
     marginHorizontal: 5,
+  },
+  passwordInputContainer: {
+    position: "relative",
+  },
+  toggleButton: {
+    position: "absolute",
+    right: 10,
+    top: 12,
+    zIndex: 2,
+  },
+  toggleText: {
+    color: "#4299E1",
+    fontWeight: "600",
+    fontSize: 14,
   },
 };

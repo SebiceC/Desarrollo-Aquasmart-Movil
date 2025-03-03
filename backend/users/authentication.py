@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from .models import Otp
-from .serializers import  GenerateOtpSerializer, ValidateOtpSerializer, ResetPasswordSerializer, LoginSerializer, RefreshTokenSerializer
+from .serializers import  GenerateOtpPasswordRecoverySerializer, ValidateOtpSerializer, ResetPasswordSerializer, LoginSerializer, RefreshTokenSerializer
 from rest_framework.exceptions import ValidationError, NotFound
 
 class LoginView(APIView):
@@ -91,7 +91,7 @@ class GenerateOtpView(APIView):
     @extend_schema(
         summary="Recuperar contraseña",
         description="Se enviará un código OTP por SMS o correo para recuperar la contraseña.",
-        request=GenerateOtpSerializer,
+        request=GenerateOtpPasswordRecoverySerializer,
         responses={
             200: {"description": "Correo enviado correctamente", "example": {"detail": "OTP enviado."}},
             400: {"description": "Error en la solicitud", "example": {"document": ["Este campo es obligatorio."]}},
@@ -108,11 +108,18 @@ class GenerateOtpView(APIView):
             - 200: Se ha enviado el OTP correctamente al correo registrado.
             - 400: Error en la solicitud, por ejemplo, si falta el documento en la petición.
         """
-        serializer = GenerateOtpSerializer(data=request.data)
-        if serializer.is_valid():
-            data = serializer.save()
-            return Response(data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = GenerateOtpPasswordRecoverySerializer(data=request.data)
+        try:
+            if serializer.is_valid():
+                data = serializer.save()
+                return Response(data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except NotFound as e:
+            return Response({"error": e.detail}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": "Unexpected error.", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
   
 
