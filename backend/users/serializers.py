@@ -295,7 +295,7 @@ class GenerateOtpPasswordRecoverySerializer(serializers.Serializer):
 
         return {
             'otp': otp_generado,
-            'message': 'Se ha enviado el OTP para recuperar la contraseña.',
+            'message': 'Se ha enviado un msn con el OTP para poder iniciar sesión.'
         }
 
 
