@@ -162,7 +162,9 @@ export default function LoginScreen() {
             <Text style={styles.enlace}>OLVIDE MI CONTRASEÑA</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate("PreRegister")}
+          >
             <Text style={styles.enlace}>SOY USUARIO NUEVO</Text>
           </TouchableOpacity>
         </View>

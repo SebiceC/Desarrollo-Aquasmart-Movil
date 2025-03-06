@@ -1,0 +1,413 @@
+import React, { useState } from "react";
+import {
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  TextInput,
+} from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { useNavigation } from "@react-navigation/native";
+import { Image } from "react-native";
+import { Picker } from '@react-native-picker/picker';
+
+// Definir el esquema de validación con los nuevos campos
+const PreRegisterSchema = yup.object().shape({
+  nombre: yup
+    .string()
+    .required("Campo obligatorio"),
+  email: yup
+    .string()
+    .email("Correo electrónico inválido")
+    .required("Campo obligatorio"),
+  document: yup
+      .string()
+      .matches(/^\d{6,12}$/, "Cédula inválida")
+      .required("Campo obligatorio"),
+  Contraseña: yup
+    .string()
+    .min(8, "Mínimo 8 caracteres")
+    .max(20, "Máximo 20 caracteres")
+    .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
+    .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
+    .matches(/[0-9]/, "Debe contener al menos un número")
+    .matches(/[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/, "Debe contener al menos un carácter especial")
+    .required("Campo obligatorio"),
+  confirmarContraseña: yup
+    .string()
+    .oneOf([yup.ref("Contraseña"), null], "Las contraseñas no coinciden")
+    .required("Campo obligatorio"),
+});
+
+export default function PreRegisterScreen() {
+  const navigation = useNavigation();
+  const [selectedOption, setSelectedOption] = useState("opcion1"); // Estado para el selector
+  const [showPassword, setShowPassword] = useState(false); // Estado para Contraseña
+  const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false); // Estado para Confirmar Contraseña
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(PreRegisterSchema),
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
+
+  // Función que se ejecuta al enviar el formulario
+  const onSubmit = async (data) => {
+    console.log("[PreRegister] Datos enviados:", data);
+    setIsLoading(true);
+
+    try {
+      // Llamada a la función para recuperar la contraseña (esto debería ser una función definida)
+      const response = await PreRegister(data);
+      console.log("[PreRegister] Respuesta del backend:", response);
+    } catch (error) {
+      console.error("[PreRegister] Error completo:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView 
+      contentContainerStyle={styles.container} 
+      keyboardShouldPersistTaps="handled" 
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.logoContainer}>
+        <Image
+          source={require('../assets/img_M1/logo.png')}
+          style={styles.logo}
+        />
+        <Text style={styles.aquaSmartText}>AquaSmart</Text>
+      </View>
+
+      <View style={styles.contenedorPrincipal}>
+        <Text style={styles.titulo}>PRE REGISTRO</Text>
+
+        <View style={styles.formulario}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Nombres<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="nombre"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tus nombres"
+                  placeholderTextColor="#A0AEC0"
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.nombre && <Text style={styles.error}>{errors.nombre.message}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Apellidos<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="apellido"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tus apellidos"
+                  placeholderTextColor="#A0AEC0"
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.apellido && <Text style={styles.error}>{errors.apellido.message}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Identificación<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="identificacion"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu numero de identificación"
+                  placeholderTextColor="#A0AEC0"
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.identificacion && <Text style={styles.error}>{errors.identificacion.message}</Text>}
+          </View>
+     
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Selecciona el tipo de persona<Text style={{ color: "red" }}> *</Text></Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedOption}
+                onValueChange={(itemValue) => setSelectedOption(itemValue)}
+              >
+                <Picker.Item label="Seleccione una opción" value="" />
+                <Picker.Item label="Persona Natural" value="persona_natural" />
+                <Picker.Item label="Persona Jurídica" value="persona_juridica" />
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Teléfono<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="telefono"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu numero de teléfono"
+                  placeholderTextColor="#A0AEC0"
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.telefono && <Text style={styles.error}>{errors.telefono.message}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Correo Electrónico<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu correo electrónico"
+                  placeholderTextColor="#A0AEC0"
+                  keyboardType="email-address"
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
+          </View>
+        </View>
+        
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            Contraseña<Text style={{ color: "red" }}> *</Text>
+          </Text>
+          <View style={styles.passwordInputContainer}>
+            <Controller
+              control={control}
+              name="Contraseña"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa la contraseña"
+                  placeholderTextColor="#A0AEC0"
+                  secureTextEntry={!showPassword}  // Mostrar/Ocultar Contraseña
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Text style={styles.toggleText}>
+                {showPassword ? "Ocultar" : "Mostrar"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {errors.Contraseña && (
+            <Text style={styles.error}>{errors.Contraseña.message}</Text>
+          )}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            Confirmar contraseña<Text style={{ color: "red" }}> *</Text>
+          </Text>
+          <View style={styles.passwordInputContainer}>
+            <Controller
+              control={control}
+              name="confirmarContraseña"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirma la contraseña"
+                  placeholderTextColor="#A0AEC0"
+                  secureTextEntry={!showPasswordConfirmar}  // Mostrar/Ocultar Confirmar Contraseña
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => setShowPasswordConfirmar(!showPasswordConfirmar)}
+            >
+              <Text style={styles.toggleText}>
+                {showPasswordConfirmar ? "Ocultar" : "Mostrar"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {errors.confirmarContraseña && (
+            <Text style={styles.error}>{errors.confirmarContraseña.message}</Text>
+          )}
+        </View>
+
+        <Text style={styles.subtitle}>
+          Anexe los siguientes documentos:
+          {'\n'}
+          {'\u2022'} Copia por ambas caras de la cédula.
+          {'\n'}
+          {'\u2022'} Copia del NIT (si es persona juridica).
+          {'\n'}
+          {'\u2022'} Copia del RUT.
+          {'\n'}
+          {'\u2022'} Copia del certificado de libertad y tradición.
+        </Text>
+
+        <TouchableOpacity
+          style={[styles.boton, { backgroundColor: buttonColor }]}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isLoading}
+          onPressIn={() => setButtonColor("#42A5F5")}
+          onPressOut={() => setButtonColor("#365486")}
+        >          
+          <Text style={styles.botonTexto}>
+            {isLoading ? "CARGANDO..." : "REGISTRAR"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = {
+  pickerContainer: {
+    width: "100%", 
+    borderWidth: 1,
+    borderColor: "#E2E8F0", 
+    borderRadius: 6,
+  },  
+  container: {
+    flexGrow: 1, // Esto asegura que el contenido se expanda si es necesario
+    backgroundColor: "#dcf2f1",
+    padding: 24,
+  },
+  contenedorPrincipal: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#000000",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    padding: 25,
+    elevation: 5,
+    marginTop: 20, // Reducir el margen superior para acercar el contenedor más arriba
+  },
+  titulo: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 40,
+    textTransform: "uppercase",
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: "justify",
+    marginBottom: 30,
+    color: "#000000",
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  formulario: {
+    gap: 20,
+  },
+  label: {
+    fontSize: 14,
+    color: "#000000",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    fontSize: 16,
+    color: "#2D3748",
+  },
+  error: {
+    color: "#E53E3E",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  boton: {
+    height: 48,
+    width: "60%",
+    backgroundColor: "#365486",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+    alignSelf: "center",
+  },
+  botonTexto: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    marginRight: 20,
+  },
+  aquaSmartText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  passwordInputContainer: {
+    position: "relative",
+  },
+  toggleButton: {
+    position: "absolute",
+    right: 10,
+    top: 12,
+    zIndex: 2,
+  },
+  toggleText: {
+    color: "#4299E1",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+};
