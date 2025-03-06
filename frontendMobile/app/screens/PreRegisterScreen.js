@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ScrollView,
   Text,
   TouchableOpacity,
   View,
   TextInput,
+  Alert,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -12,57 +13,26 @@ import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Alert } from "react-native";
 
-// Definir el esquema de validación con los nuevos campos
+
+// Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
-  nombre: yup
-    .string()
-    .max(20, "Máximo 20 caracteres")
-    .required("Campo obligatorio"),
-  apellido: yup
-    .string()
-    .max(20, "Máximo 20 caracteres")
-    .required("Campo obligatorio"),
-  identificacion: yup
-    .string()
-    .matches(/^\d+$/, "Solo se permiten números")
-    .max(15, "Máximo 15 caracteres")
-    .required("Campo obligatorio"),
-  direccion: yup
-    .string()
-    .max(30, "Máximo 30 caracteres")
-    .required("Campo obligatorio"),
-  telefono: yup
-    .string()
-    .matches(/^\d+$/, "Solo se permiten números")
-    .max(13, "Máximo 13 caracteres")
-    .required("Campo obligatorio"),
-  email: yup
-    .string()
-    .email("Correo electrónico inválido")
-    .max(50, "Máximo 50 caracteres")
-    .required("Campo obligatorio"),
-  document: yup
-    .string()
-    .matches(/^\d{6,12}$/, "Cédula inválida")
-    .required("Campo obligatorio"),
+  nombre: yup.string().max(20, "Máximo 20 caracteres").required("Campo obligatorio"),
+  apellido: yup.string().max(20, "Máximo 20 caracteres").required("Campo obligatorio"),
+  identificacion: yup.string().matches(/^\d{6,12}$/, "Debe tener entre 6 y 12 dígitos").required("Campo obligatorio"),
+  direccion: yup.string().max(30, "Máximo 30 caracteres").required("Campo obligatorio"),
+  telefono: yup.string().matches(/^\d{7,13}$/, "Debe tener entre 7 y 13 dígitos").required("Campo obligatorio"),
+  email: yup.string().email("Correo inválido").max(50, "Máximo 50 caracteres").required("Campo obligatorio"),
   Contraseña: yup
     .string()
     .min(8, "Mínimo 8 caracteres")
     .max(20, "Máximo 20 caracteres")
-    .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
-    .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
+    .matches(/[A-Z]/, "Debe contener al menos una mayúscula")
+    .matches(/[a-z]/, "Debe contener al menos una minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
-    .matches(
-      /[!@#$%^&*()_+\-={}|\\:;"'<>,.?/]/,
-      "Debe contener al menos un carácter especial"
-    )
+    .matches(/[!@#$%^&*()_+\-=\{}|\:;"'<>,.?/]/, "Debe contener un carácter especial")
     .required("Campo obligatorio"),
-  confirmarContraseña: yup
-    .string()
-    .oneOf([yup.ref("Contraseña"), null], "Las contraseñas no coinciden")
-    .required("Campo obligatorio"),
+  confirmarContraseña: yup.string().oneOf([yup.ref("Contraseña"), null], "Las contraseñas no coinciden").required("Campo obligatorio"),
   tipoIdentificacion: yup.string().required("Campo obligatorio"),
   tipoPersona: yup.string().required("Campo obligatorio"),
 });
@@ -72,7 +42,10 @@ export default function PreRegisterScreen() {
   const [selectedOption, setSelectedOption] = useState("opcion1"); // Estado para el selector
   const [showPassword, setShowPassword] = useState(false); // Estado para Contraseña
   const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false); // Estado para Confirmar Contraseña
-
+  const [documentTypes, setDocumentTypes] = useState([]);
+  const [personTypes, setPersonTypes] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
   const {
     control,
     handleSubmit,
@@ -81,20 +54,57 @@ export default function PreRegisterScreen() {
     resolver: yupResolver(PreRegisterSchema),
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
 
-  // Función que se ejecuta al enviar el formulario
+
+
+
+ // useEffect(() => {
+   // async function fetchTypes() {
+     // try {
+       // const docRes = await fetch("http://127.0.0.1:8000/admin/document-type");
+        //const personRes = await fetch("http://127.0.0.1:8000/admin/person-type");
+       // const docData = await docRes.json();
+        //const personData = await personRes.json();
+        //setDocumentTypes(docData);
+        //setPersonTypes(personData);
+      //} catch (error) {
+        //console.error("Error al cargar los tipos de datos:", error);
+      //}
+    //}
+    //fetchTypes();
+  //}, []);
+
   const onSubmit = async (data) => {
-    console.log("[PreRegister] Datos enviados:", data);
     setIsLoading(true);
-
     try {
-      // Llamada a la función para recuperar la contraseña (esto debería ser una función definida)
-      const response = await PreRegister(data);
-      console.log("[PreRegister] Respuesta del backend:", response);
+      const response = await fetch("http://127.0.0.1:8000/api/users/pre-register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          document: data.identificacion,
+          first_name: data.nombre,
+          last_name: data.apellido,
+          email: data.email,
+          document_type: data.tipoIdentificacion,
+          person_type: data.tipoPersona,
+          phone: data.telefono,
+          address: data.direccion,
+          password: data.Contraseña,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        Alert.alert("Registro exitoso", "El usuario ha sido pre-registrado exitosamente.", [
+          { text: "OK", onPress: () => navigation.navigate("Login") },
+        ]);
+      } else {
+        Alert.alert("Error en el registro", result.message || "Hubo un problema en el pre-registro.");
+      }
     } catch (error) {
-      console.error("[PreRegister] Error completo:", error);
+      Alert.alert("Error", "No se pudo conectar con el servidor.");
     } finally {
       setIsLoading(false);
     }
@@ -191,8 +201,10 @@ export default function PreRegisterScreen() {
               render={({ field: { onChange, value } }) => (
                 <View style={styles.pickerContainer}>
                   <Picker selectedValue={value} onValueChange={onChange}>
-                    <Picker.Item label="Seleccione una opción" value="" />
-                    <Picker.Item label="Cédula de ciudadanía (CC)" value="CC" />
+                  <Picker.Item label="Seleccione una opción" value="" />
+                    
+                    
+                  <Picker.Item label="Cédula de ciudadanía (CC)" value="CC" />
                     <Picker.Item
                       label="Cédula de extranjería (CE)"
                       value="CE"
@@ -205,10 +217,10 @@ export default function PreRegisterScreen() {
                       label="Documento de identificación extranjero (DIE)"
                       value="DIE"
                     />
-                  </Picker>
-                </View>
-              )}
-            />
+              </Picker>
+            </View>
+            )}
+        />
             {errors.tipoIdentificacion && (
               <Text style={styles.error}>
                 {errors.tipoIdentificacion.message}
@@ -372,98 +384,98 @@ export default function PreRegisterScreen() {
 
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>
-            Contraseña<Text style={{ color: "red" }}> *</Text>
-          </Text>
-          <View style={styles.passwordInputContainer}>
-            <Controller
-              control={control}
-              name="Contraseña"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingresa la contraseña"
-                  placeholderTextColor="#A0AEC0"
-                  secureTextEntry={!showPassword} // Mostrar/Ocultar Contraseña
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Text style={styles.toggleText}>
-                {showPassword ? "Ocultar" : "Mostrar"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {errors.Contraseña && (
-            <Text style={styles.error}>{errors.Contraseña.message}</Text>
-          )}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>
-            Confirmar contraseña<Text style={{ color: "red" }}> *</Text>
-          </Text>
-          <View style={styles.passwordInputContainer}>
-            <Controller
-              control={control}
-              name="confirmarContraseña"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirma la contraseña"
-                  placeholderTextColor="#A0AEC0"
-                  secureTextEntry={!showPasswordConfirmar} // Mostrar/Ocultar Confirmar Contraseña
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() => setShowPasswordConfirmar(!showPasswordConfirmar)}
-            >
-              <Text style={styles.toggleText}>
-                {showPasswordConfirmar ? "Ocultar" : "Mostrar"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {errors.confirmarContraseña && (
-            <Text style={styles.error}>
-              {errors.confirmarContraseña.message}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Contraseña<Text style={{ color: "red" }}> *</Text>
             </Text>
-          )}
-        </View>
+            <View style={styles.passwordInputContainer}>
+              <Controller
+                control={control}
+                name="Contraseña"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Ingresa la contraseña"
+                    placeholderTextColor="#A0AEC0"
+                    secureTextEntry={!showPassword} // Mostrar/Ocultar Contraseña
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+              />
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Text style={styles.toggleText}>
+                  {showPassword ? "Ocultar" : "Mostrar"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {errors.Contraseña && (
+              <Text style={styles.error}>{errors.Contraseña.message}</Text>
+            )}
+          </View>
 
-        <Text style={styles.subtitle}>
-          Anexe los siguientes documentos:
-          {"\n"}
-          {"\u2022"} Copia por ambas caras de la cédula.
-          {"\n"}
-          {"\u2022"} Copia del NIT (si es persona juridica).
-          {"\n"}
-          {"\u2022"} Copia del RUT.
-          {"\n"}
-          {"\u2022"} Copia del certificado de libertad y tradición.
-        </Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Confirmar contraseña<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <View style={styles.passwordInputContainer}>
+              <Controller
+                control={control}
+                name="confirmarContraseña"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirma la contraseña"
+                    placeholderTextColor="#A0AEC0"
+                    secureTextEntry={!showPasswordConfirmar} // Mostrar/Ocultar Confirmar Contraseña
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+              />
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setShowPasswordConfirmar(!showPasswordConfirmar)}
+              >
+                <Text style={styles.toggleText}>
+                  {showPasswordConfirmar ? "Ocultar" : "Mostrar"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {errors.confirmarContraseña && (
+              <Text style={styles.error}>
+                {errors.confirmarContraseña.message}
+              </Text>
+            )}
+          </View>
 
-        <TouchableOpacity
-          style={[styles.boton, { backgroundColor: buttonColor }]}
-          onPress={handleSubmit(onSubmit)}
-          disabled={isLoading}
-          onPressIn={() => setButtonColor("#42A5F5")}
-          onPressOut={() => setButtonColor("#365486")}
-        >
-          <Text style={styles.botonTexto}>
-            {isLoading ? "CARGANDO..." : "REGISTRAR"}
+          <Text style={styles.subtitle}>
+            Anexe los siguientes documentos:
+            {"\n"}
+            {"\u2022"} Copia por ambas caras de la cédula.
+            {"\n"}
+            {"\u2022"} Copia del NIT (si es persona juridica).
+            {"\n"}
+            {"\u2022"} Copia del RUT.
+            {"\n"}
+            {"\u2022"} Copia del certificado de libertad y tradición.
           </Text>
-        </TouchableOpacity>
-      </View>
+
+          <TouchableOpacity
+            style={[styles.boton, { backgroundColor: buttonColor }]}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isLoading}
+            onPressIn={() => setButtonColor("#42A5F5")}
+            onPressOut={() => setButtonColor("#365486")}
+          >
+            <Text style={styles.botonTexto}>
+              {isLoading ? "CARGANDO..." : "REGISTRAR"}
+            </Text>
+          </TouchableOpacity>
+        </View>
     </ScrollView>
   );
 }
