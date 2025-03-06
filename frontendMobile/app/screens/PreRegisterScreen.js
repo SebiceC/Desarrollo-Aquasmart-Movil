@@ -11,21 +11,42 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from "@react-native-picker/picker";
+import { Alert } from "react-native";
 
 // Definir el esquema de validación con los nuevos campos
 const PreRegisterSchema = yup.object().shape({
   nombre: yup
     .string()
+    .max(20, "Máximo 20 caracteres")
+    .required("Campo obligatorio"),
+  apellido: yup
+    .string()
+    .max(20, "Máximo 20 caracteres")
+    .required("Campo obligatorio"),
+  identificacion: yup
+    .string()
+    .matches(/^\d+$/, "Solo se permiten números")
+    .max(15, "Máximo 15 caracteres")
+    .required("Campo obligatorio"),
+  direccion: yup
+    .string()
+    .max(30, "Máximo 30 caracteres")
+    .required("Campo obligatorio"),
+  telefono: yup
+    .string()
+    .matches(/^\d+$/, "Solo se permiten números")
+    .max(13, "Máximo 13 caracteres")
     .required("Campo obligatorio"),
   email: yup
     .string()
     .email("Correo electrónico inválido")
+    .max(50, "Máximo 50 caracteres")
     .required("Campo obligatorio"),
   document: yup
-      .string()
-      .matches(/^\d{6,12}$/, "Cédula inválida")
-      .required("Campo obligatorio"),
+    .string()
+    .matches(/^\d{6,12}$/, "Cédula inválida")
+    .required("Campo obligatorio"),
   Contraseña: yup
     .string()
     .min(8, "Mínimo 8 caracteres")
@@ -33,12 +54,17 @@ const PreRegisterSchema = yup.object().shape({
     .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
     .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
-    .matches(/[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/, "Debe contener al menos un carácter especial")
+    .matches(
+      /[!@#$%^&*()_+\-={}|\\:;"'<>,.?/]/,
+      "Debe contener al menos un carácter especial"
+    )
     .required("Campo obligatorio"),
   confirmarContraseña: yup
     .string()
     .oneOf([yup.ref("Contraseña"), null], "Las contraseñas no coinciden")
     .required("Campo obligatorio"),
+  tipoIdentificacion: yup.string().required("Campo obligatorio"),
+  tipoPersona: yup.string().required("Campo obligatorio"),
 });
 
 export default function PreRegisterScreen() {
@@ -75,14 +101,14 @@ export default function PreRegisterScreen() {
   };
 
   return (
-    <ScrollView 
-      contentContainerStyle={styles.container} 
-      keyboardShouldPersistTaps="handled" 
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.logoContainer}>
         <Image
-          source={require('../assets/img_M1/logo.png')}
+          source={require("../assets/img_M1/logo.png")}
           style={styles.logo}
         />
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
@@ -104,12 +130,23 @@ export default function PreRegisterScreen() {
                   style={styles.input}
                   placeholder="Ingresa tus nombres"
                   placeholderTextColor="#A0AEC0"
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    if (text.length > 20) {
+                      Alert.alert(
+                        "Límite de caracteres",
+                        "Máximo 20 caracteres permitidos."
+                      );
+                    } else {
+                      onChange(text);
+                    }
+                  }}
                   value={value}
                 />
               )}
             />
-            {errors.nombre && <Text style={styles.error}>{errors.nombre.message}</Text>}
+            {errors.nombre && (
+              <Text style={styles.error}>{errors.nombre.message}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -124,14 +161,61 @@ export default function PreRegisterScreen() {
                   style={styles.input}
                   placeholder="Ingresa tus apellidos"
                   placeholderTextColor="#A0AEC0"
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    if (text.length > 20) {
+                      Alert.alert(
+                        "Límite de caracteres",
+                        "Máximo 20 caracteres permitidos."
+                      );
+                    } else {
+                      onChange(text);
+                    }
+                  }}
                   value={value}
                 />
               )}
             />
-            {errors.apellido && <Text style={styles.error}>{errors.apellido.message}</Text>}
+            {errors.apellido && (
+              <Text style={styles.error}>{errors.apellido.message}</Text>
+            )}
           </View>
 
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Selecciona el tipo de identificación
+              <Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="tipoIdentificacion"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.pickerContainer}>
+                  <Picker selectedValue={value} onValueChange={onChange}>
+                    <Picker.Item label="Seleccione una opción" value="" />
+                    <Picker.Item label="Cédula de ciudadanía (CC)" value="CC" />
+                    <Picker.Item
+                      label="Cédula de extranjería (CE)"
+                      value="CE"
+                    />
+                    <Picker.Item
+                      label="Permiso especial de permanencia (PEP)"
+                      value="PEP"
+                    />
+                    <Picker.Item
+                      label="Documento de identificación extranjero (DIE)"
+                      value="DIE"
+                    />
+                  </Picker>
+                </View>
+              )}
+            />
+            {errors.tipoIdentificacion && (
+              <Text style={styles.error}>
+                {errors.tipoIdentificacion.message}
+              </Text>
+            )}
+          </View>
+          
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Identificación<Text style={{ color: "red" }}> *</Text>
@@ -142,28 +226,87 @@ export default function PreRegisterScreen() {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingresa tu numero de identificación"
+                  placeholder="Ingresa tu número de identificación"
                   placeholderTextColor="#A0AEC0"
-                  onChangeText={onChange}
+                  keyboardType="numeric"
+                  onChangeText={(text) => {
+                    // Filtrar solo números y limitar a 15 caracteres
+                    const numericText = text.replace(/[^0-9]/g, "");
+                    if (numericText.length > 15) {
+                      Alert.alert(
+                        "Límite de caracteres",
+                        "Máximo 15 caracteres permitidos."
+                      );
+                    } else {
+                      onChange(numericText);
+                    }
+                  }}
                   value={value}
                 />
               )}
             />
-            {errors.identificacion && <Text style={styles.error}>{errors.identificacion.message}</Text>}
+            {errors.identificacion && (
+              <Text style={styles.error}>{errors.identificacion.message}</Text>
+            )}
           </View>
-     
+
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Selecciona el tipo de persona<Text style={{ color: "red" }}> *</Text></Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={selectedOption}
-                onValueChange={(itemValue) => setSelectedOption(itemValue)}
-              >
-                <Picker.Item label="Seleccione una opción" value="" />
-                <Picker.Item label="Persona Natural" value="persona_natural" />
-                <Picker.Item label="Persona Jurídica" value="persona_juridica" />
-              </Picker>
-            </View>
+            <Text style={styles.label}>
+              Selecciona el tipo de persona
+              <Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="tipoPersona"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.pickerContainer}>
+                  <Picker selectedValue={value} onValueChange={onChange}>
+                    <Picker.Item label="Seleccione una opción" value="" />
+                    <Picker.Item
+                      label="Persona Natural"
+                      value="persona_natural"
+                    />
+                    <Picker.Item
+                      label="Persona Jurídica"
+                      value="persona_juridica"
+                    />
+                  </Picker>
+                </View>
+              )}
+            />
+            {errors.tipoPersona && (
+              <Text style={styles.error}>{errors.tipoPersona.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Dirección de residencia<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="direccion"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu dirección de residencia"
+                  placeholderTextColor="#A0AEC0"
+                  onChangeText={(text) => {
+                    if (text.length > 30) {
+                      Alert.alert(
+                        "Límite de caracteres",
+                        "Máximo 30 caracteres permitidos."
+                      );
+                    } else {
+                      onChange(text);
+                    }
+                  }}
+                  value={value}
+                />
+              )}
+            />
+            {errors.direccion && (
+              <Text style={styles.error}>{errors.direccion.message}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -176,38 +319,59 @@ export default function PreRegisterScreen() {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingresa tu numero de teléfono"
+                  placeholder="Ingresa tu número de teléfono"
                   placeholderTextColor="#A0AEC0"
-                  onChangeText={onChange}
+                  keyboardType="numeric"
+                  onChangeText={(text) => {
+                    // Filtrar solo números y limitar a 13 caracteres
+                    const numericText = text.replace(/[^0-9]/g, "");
+                    if (numericText.length > 13) {
+                      Alert.alert(
+                        "Límite de caracteres",
+                        "Máximo 13 caracteres permitidos."
+                      );
+                    } else {
+                      onChange(numericText);
+                    }
+                  }}
                   value={value}
                 />
               )}
             />
-            {errors.telefono && <Text style={styles.error}>{errors.telefono.message}</Text>}
+            {errors.telefono && (
+              <Text style={styles.error}>{errors.telefono.message}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Correo Electrónico<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingresa tu correo electrónico"
-                  placeholderTextColor="#A0AEC0"
-                  keyboardType="email-address"
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-            {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
-          </View>
+  <Text style={styles.label}>
+    Correo electrónico<Text style={{ color: "red" }}> *</Text>
+  </Text>
+  <Controller
+    control={control}
+    name="email"
+    render={({ field: { onChange, value } }) => (
+      <TextInput
+        style={styles.input}
+        placeholder="Ingresa tu correo electrónico"
+        placeholderTextColor="#A0AEC0"
+        keyboardType="email-address"
+        onChangeText={(text) => {
+          if (text.length > 50) {
+            Alert.alert("Límite de caracteres", "Máximo 50 caracteres permitidos.");
+          } else {
+            onChange(text);
+          }
+        }}
+        value={value}
+      />
+    )}
+  />
+  {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
+</View>
+
         </View>
-        
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>
             Contraseña<Text style={{ color: "red" }}> *</Text>
@@ -221,7 +385,7 @@ export default function PreRegisterScreen() {
                   style={styles.input}
                   placeholder="Ingresa la contraseña"
                   placeholderTextColor="#A0AEC0"
-                  secureTextEntry={!showPassword}  // Mostrar/Ocultar Contraseña
+                  secureTextEntry={!showPassword} // Mostrar/Ocultar Contraseña
                   onChangeText={onChange}
                   value={value}
                 />
@@ -254,7 +418,7 @@ export default function PreRegisterScreen() {
                   style={styles.input}
                   placeholder="Confirma la contraseña"
                   placeholderTextColor="#A0AEC0"
-                  secureTextEntry={!showPasswordConfirmar}  // Mostrar/Ocultar Confirmar Contraseña
+                  secureTextEntry={!showPasswordConfirmar} // Mostrar/Ocultar Confirmar Contraseña
                   onChangeText={onChange}
                   value={value}
                 />
@@ -270,20 +434,22 @@ export default function PreRegisterScreen() {
             </TouchableOpacity>
           </View>
           {errors.confirmarContraseña && (
-            <Text style={styles.error}>{errors.confirmarContraseña.message}</Text>
+            <Text style={styles.error}>
+              {errors.confirmarContraseña.message}
+            </Text>
           )}
         </View>
 
         <Text style={styles.subtitle}>
           Anexe los siguientes documentos:
-          {'\n'}
-          {'\u2022'} Copia por ambas caras de la cédula.
-          {'\n'}
-          {'\u2022'} Copia del NIT (si es persona juridica).
-          {'\n'}
-          {'\u2022'} Copia del RUT.
-          {'\n'}
-          {'\u2022'} Copia del certificado de libertad y tradición.
+          {"\n"}
+          {"\u2022"} Copia por ambas caras de la cédula.
+          {"\n"}
+          {"\u2022"} Copia del NIT (si es persona juridica).
+          {"\n"}
+          {"\u2022"} Copia del RUT.
+          {"\n"}
+          {"\u2022"} Copia del certificado de libertad y tradición.
         </Text>
 
         <TouchableOpacity
@@ -292,7 +458,7 @@ export default function PreRegisterScreen() {
           disabled={isLoading}
           onPressIn={() => setButtonColor("#42A5F5")}
           onPressOut={() => setButtonColor("#365486")}
-        >          
+        >
           <Text style={styles.botonTexto}>
             {isLoading ? "CARGANDO..." : "REGISTRAR"}
           </Text>
@@ -304,11 +470,11 @@ export default function PreRegisterScreen() {
 
 const styles = {
   pickerContainer: {
-    width: "100%", 
+    width: "100%",
     borderWidth: 1,
-    borderColor: "#E2E8F0", 
+    borderColor: "#E2E8F0",
     borderRadius: 6,
-  },  
+  },
   container: {
     flexGrow: 1, // Esto asegura que el contenido se expanda si es necesario
     backgroundColor: "#dcf2f1",

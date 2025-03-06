@@ -161,7 +161,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+        'API.custom_auth.CustomTokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -177,6 +177,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Para desarrollo con React
     "http://localhost:8081",
     "https://desarrollo-aqua-smart-frontend-mu.vercel.app",
+    "https://desarrollo-aquasmart-frontend2.vercel.app",
 ]
 
 # También puedes permitir todas las solicitudes (NO recomendado en producción)
