@@ -5,8 +5,26 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import api from "../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Image } from "react-native";
+
+export const logout = async (navigation) => {
+  try {
+    await api.post("/users/logout");
+    await AsyncStorage.removeItem("authToken");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
+  } catch (error) {
+    console.error("[Logout] Error:", error);
+    throw new Error("Error al cerrar sesión");
+  }
+};
 
 const NavbarLayout = ({ children, navigation }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,7 +52,13 @@ const NavbarLayout = ({ children, navigation }) => {
       icon: "exit-to-app",
       title: "Cerrar sesión",
       color: "#FF3B30", // Color distintivo
-      action: () => logout(), // Función de logout
+      action: async () => {
+        try {
+          await logout(navigation);
+        } catch (error) {
+          Alert.alert("Error", "No se pudo cerrar sesión");
+        }
+      },
     },
   ];
 
@@ -45,7 +69,14 @@ const NavbarLayout = ({ children, navigation }) => {
         <TouchableOpacity onPress={() => setIsMenuOpen(!isMenuOpen)}>
           <MaterialIcons name="menu" size={28} color="#2D5B7B" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>AquaSmart</Text>
+        {/* Contenedor del logo y texto */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../assets/img_M1/logo.png")}
+            style={styles.logo}
+          />
+          <Text style={styles.aquaSmartText}>AquaSmart</Text>
+        </View>
         <View style={{ width: 28 }} /> {/* Espacio equilibrado */}
       </View>
 
@@ -88,15 +119,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 20,
+    padding: 15,
     backgroundColor: "white",
     elevation: 3,
     zIndex: 1000,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#2D5B7B",
   },
   menuContainer: {
     position: "absolute",
@@ -128,8 +154,23 @@ const styles = StyleSheet.create({
   },
   separatorTop: {
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    marginTop: 8
+    borderTopColor: "#F0F0F0",
+    marginTop: 8,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+  },
+  aquaSmartText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000000",
   },
 });
 

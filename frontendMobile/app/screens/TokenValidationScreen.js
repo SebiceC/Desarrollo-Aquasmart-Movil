@@ -11,8 +11,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import api from "../services/api";
 import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function TokenValidationScreen() {
   const navigation = useNavigation();
@@ -39,17 +38,19 @@ export default function TokenValidationScreen() {
     const tokenString = token.join("");
     console.log("[Token] Validando token:", tokenString);
     try {
-      const response = await api.post("/users/validate-otp", {
-        document: document,
-        otp: tokenString,
-      },
-      {
-        headers: {
-          Authorization: undefined, // Elimina el token si existe
+      const response = await api.post(
+        "/users/validate-otp",
+        {
+          document: document,
+          otp: tokenString,
         },
-      });
+        {
+          headers: {
+            Authorization: undefined, // Elimina el token si existe
+          },
+        }
+      );
       console.log("[Token] Respuesta:", response.data);
-      
 
       if (response.status === 200) {
         const { token: authToken } = response.data;
@@ -57,12 +58,12 @@ export default function TokenValidationScreen() {
         if (route.params?.isPasswordRecovery) {
           console.log("Redirigiendo a Cambio de contraseña...");
           // Navegar a cambio de contraseña
-          navigation.replace("PasswordChange", { 
+          navigation.replace("PasswordChange", {
             document: document,
-            token: tokenString
+            token: tokenString,
           });
         } else {
-          await AsyncStorage.setItem('authToken', response.data.token);
+          await AsyncStorage.setItem("authToken", response.data.token);
           console.log("Redirigiendo a HomeScreen...");
           navigation.replace("Home");
         }
@@ -81,7 +82,7 @@ export default function TokenValidationScreen() {
     try {
       await api.post("/users/generate-otp", {
         document: document,
-        phone: route.params.phone
+        phone: route.params.phone,
       });
       console.log("[Token] Token reenviado");
 
@@ -93,7 +94,9 @@ export default function TokenValidationScreen() {
       Alert.alert("Éxito", "Nuevo código enviado");
     } catch (error) {
       console.error("[Token] Error:", error);
-      setAlertMessage(error.response?.data?.message || "Error al reenviar el token");
+      setAlertMessage(
+        error.response?.data?.message || "Error al reenviar el token"
+      );
       setShowCustomAlert(true);
       setTimeout(() => setShowCustomAlert(false), 5000);
     } finally {

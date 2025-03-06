@@ -9,18 +9,20 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-  console.log("Request Headers:", config.headers);
+  const publicEndpoints = [
+    "/users/login",
+    "/users/validate-otp",
+    "/users/generate-otp"
+  ];
 
-  if (
-    !config.url.includes("/users/login") &&
-    !config.url.includes("/users/validate-otp") &&
-    !config.url.includes("/users/generate-otp")
-  ) {
+  // Agregar token a TODAS las rutas excepto las públicas
+  if (!publicEndpoints.some(endpoint => config.url.includes(endpoint))) {
     const token = await AsyncStorage.getItem("authToken");
     if (token) {
-      config.headers.Authorization = `Token ${token}`; // Usar "Token" en lugar de "Bearer"
+      config.headers.Authorization = `Token ${token}`;
     }
   }
+  
   return config;
 });
 

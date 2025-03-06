@@ -342,8 +342,6 @@ const styles = {
     justifyContent: "center",
     width: "100%",
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
   },
   alertText: {
     color: "#757777",

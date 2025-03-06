@@ -11,17 +11,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import NavbarLayout from "../components/NavbarLayout";
 import api from "../services/api";
 import Icon from "react-native-vector-icons/MaterialIcons";
-
-
-export const logout = async () => {
-  try {
-    await api.post('/users/logout');
-    await AsyncStorage.removeItem('authToken');
-  } catch (error) {
-    console.error("[Logout] Error:", error);
-    throw new Error("Error al cerrar sesión");
-  }
-};
+import { Image } from "react-native";
 
 export default function ProfileScreen({ navigation }) {
   const [userData, setUserData] = useState(null);
@@ -51,13 +41,10 @@ export default function ProfileScreen({ navigation }) {
       } finally {
         setLoading(false);
       }
-
-      
     };
 
     fetchProfileData();
   }, []);
-  
 
   if (loading) {
     return (
@@ -88,6 +75,10 @@ export default function ProfileScreen({ navigation }) {
         </View>
 
         <View style={styles.profileContainer}>
+          <Image
+            source={require("../assets/img_M1/icon-profile.png")}
+            style={styles.profileImage}
+          />
           <View style={styles.userInfo}>
             <Text style={styles.userName}>
               {userData.firstName} {userData.lastName}
@@ -115,7 +106,7 @@ export default function ProfileScreen({ navigation }) {
             onPress={() => navigation.navigate("EditarPerfil")}
           >
             <Text style={styles.editText}>Editar</Text>
-            <MaterialIcons name="edit" size={18} color="#2D5B7B" />
+            <MaterialIcons name="edit" size={22} color="#2D5B7B" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -126,49 +117,72 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F9FF",
+    backgroundColor: "white",
   },
   profileHeader: {
-    backgroundColor: "#2D5B7B",
-    paddingVertical: 20,
+    paddingVertical: 150,
     alignItems: "center",
+    zIndex: 2,
+    elevation: 2,
   },
   headerTitle: {
-    color: "white",
-    fontSize: 20,
+    color: "#000000",
+    fontSize: 30,
     fontWeight: "bold",
+    position: "absolute",
+    zIndex: 3,
+    top: 50,
   },
   profileContainer: {
     margin: 20,
     backgroundColor: "white",
     borderRadius: 12,
-    padding: 16,
-    elevation: 3,
+    padding: 24,
+    elevation: 5,
+    marginTop: -100,
+    zIndex: 1,
+    alignItems: "center",
+  },
+  profileImage: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignSelf: "center",
+    marginTop: -100,
+    borderWidth: 4,
+    borderColor: "white",
+    backgroundColor: "white",
+    zIndex: 1,
   },
   userInfo: {
+    width: "100%",
+    alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
     paddingBottom: 16,
   },
   userName: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "bold",
-    color: "#2D5B7B",
-    marginBottom: 4,
+    color: "#000000",
+    marginTop: 15,
+    marginBottom: 6,
   },
   userId: {
     fontSize: 16,
     color: "#666",
-    marginBottom: 16,
+    marginBottom: 25,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 18,
+    width: "100%",
+    justifyContent: "center",
   },
   infoText: {
     fontSize: 16,
-    color: "#444",
+    color: "#000000",
     marginLeft: 10,
   },
   editButton: {
@@ -178,7 +192,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   editText: {
-    color: "#2D5B7B",
+    color: "#000000",
     fontSize: 16,
     marginRight: 8,
     fontWeight: "500",
