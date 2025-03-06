@@ -11,6 +11,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
+import api from "../services/api";
 
 const PasswordChangeSchema = yup.object().shape({
   document: yup
@@ -52,7 +53,11 @@ export default function PasswordChangeScreen() {
     setIsLoading(true);
 
     try {
-      const response = await PasswordChange(data);
+      const response = await api.post("/users/reset-password", {
+        document: route.params.document,
+        new_password: data.nuevaContraseña
+      });
+      
       console.log("[PasswordChange] Respuesta del backend:", response);
 
       if (response.document) {
@@ -277,8 +282,6 @@ const styles = {
     justifyContent: "center",
     width: "100%",
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
   },
   alertText: {
     color: "#757777",

@@ -1,7 +1,7 @@
 from rest_framework import generics,status
 from rest_framework.views import APIView
 from .models import CustomUser, DocumentType, PersonType  
-from .serializers import CustomUserSerializer, DocumentTypeSerializer, PersonTypeSerializer 
+from .serializers import CustomUserSerializer, DocumentTypeSerializer, PersonTypeSerializer ,UserProfileSerializer
 from rest_framework.permissions import IsAdminUser, IsAuthenticated  
 from drf_spectacular.utils import extend_schema, extend_schema_view,OpenApiParameter
 from rest_framework.response import Response
@@ -87,7 +87,7 @@ class CustomUserListView(generics.ListAPIView):
 
 
 @extend_schema(
-    summary="Activar usuario",
+    summary="Registrar usuario",
     description="Activa un usuario desactivado en el sistema. Solo accesible para administradores autenticados.",
     parameters=[
         OpenApiParameter(
@@ -106,7 +106,7 @@ class CustomUserListView(generics.ListAPIView):
 )
 class UserRegisterAPIView(APIView):
     """
-    API para activar usuarios en el sistema.
+    API para registar usuario en el sistema.
 
     Solo los administradores autenticados pueden acceder a esta vista.
     """
@@ -138,5 +138,83 @@ class UserRegisterAPIView(APIView):
         user.is_registered = True
         user.is_active = True
         user.save()
-        return Response({'status': 'User activated'}, status=status.HTTP_200_OK)
+        return Response({'status': 'User registred'}, status=status.HTTP_200_OK)
 
+class UserInactiveAPIView(APIView):
+    """
+    API para desactivar usuario en el sistema.
+
+    Solo los administradores autenticados pueden acceder a esta vista.
+    """
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def patch(self, request, document):
+        """
+        Activa un usuario con el número de documento proporcionado.
+
+        Args:
+            request: Objeto de la solicitud.
+            document (str): Documento del usuario a activar.
+
+        Returns:
+            Response: Estado de la activación del usuario.
+        """        
+        user = validate_user(document)
+        # Verificar si la validacion de usuario no sea None
+        if user is None:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Verificar si ya está registrado
+        if not user.is_registered:
+            return Response({'status': 'The user is not registered'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verificar si ya está activo
+        if not user.is_active:
+            return Response({'status': 'The user is not activated'}, status=status.HTTP_400_BAD_REQUEST)   
+        user.is_active = False
+        user.save()
+        return Response({'status': 'User inactivated'}, status=status.HTTP_200_OK)
+    
+class UserActivateAPIView(APIView):
+    """
+    API para activar usuarios en el sistema.
+
+    Solo los administradores autenticados pueden acceder a esta vista.
+    """
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def patch(self, request, document):
+        """
+        Activa un usuario con el número de documento proporcionado.
+
+        Args:
+            request: Objeto de la solicitud.
+            document (str): Documento del usuario a activar.
+
+        Returns:
+            Response: Estado de la activación del usuario.
+        """        
+        user = validate_user(document)
+        # Verificar si la validacion de usuario no sea None
+        if user is None:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Verificar si ya está registrado
+        if not user.is_registered:
+            return Response({'status': 'The user is not registered'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verificar si ya está activo
+        if user.is_active:
+            return Response({'status': 'The user is activated'}, status=status.HTTP_400_BAD_REQUEST)   
+        user.is_active = True
+        user.save()
+        return Response({'status': 'User activated'}, status=status.HTTP_200_OK)    
+
+class UseroProfilelView(generics.RetrieveAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        print(self.request.user)
+        return self.request.user    
+    

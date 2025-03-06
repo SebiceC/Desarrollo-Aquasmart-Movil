@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiExample
-from .models import Otp
+from .models import Otp,CustomUser
 from .serializers import  GenerateOtpPasswordRecoverySerializer, ValidateOtpSerializer, ResetPasswordSerializer, LoginSerializer, RefreshTokenSerializer
 from rest_framework.exceptions import ValidationError, NotFound
-
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticated
 class LoginView(APIView):
     """
     Vista para el inicio de sesión de usuarios.
@@ -58,10 +59,12 @@ class LoginView(APIView):
         """
         try:
             serializer = LoginSerializer(data=request.data)
+            
             if serializer.is_valid(raise_exception=True):
                 data = serializer.validated_data
                 document = data.get('document')
-                print(document)
+                user_instance = CustomUser.objects.filter(document=document).first()
+                Token.objects.filter(user=user_instance).delete()
                 otp_instance = Otp.objects.filter(user=document).first()
                 otp_instance.is_login = True
                 otp_instance.save()
@@ -206,36 +209,30 @@ class ResetPasswordView(APIView):
             return Response({"message": "Contraseña restablecida correctamente."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class RefreshTokenView(APIView):
-    permission_classes = [AllowAny]
+class LogoutView(APIView):
     """
-    Vista para la renovación del token de acceso.
+    Vista para cerrar sesión de un usuario autenticado.
 
-    Permite a los usuarios obtener un nuevo `access token` 
-    a partir de un `refresh token` válido.
+    Permite eliminar el token de autenticación del usuario, invalidando su sesión actual.
     """
 
-    @extend_schema(
-        request=RefreshTokenSerializer,
-        responses={200: RefreshTokenSerializer, 400: {"detail": "Token inválido o expirado."}},
-        description="Renueva el token de acceso utilizando un refresh token válido.",
-        summary="Refresh token",
-    )
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         """
-        Maneja la solicitud POST para la renovación del token de acceso.
-
-        Parámetros:
-        - `request` (Request): Contiene el `refresh token` en el cuerpo de la solicitud.
+        Cierra la sesión del usuario autenticado eliminando su token de acceso.
 
         Retorno:
-        - `Response`: Devuelve un nuevo `access token` si el refresh token es válido.
-        - Código 200: Token renovado exitosamente.
-        - Código 400: Token inválido o expirado.
+        - `200 OK`: Si el cierre de sesión es exitoso.
+        - `401 UNAUTHORIZED`: Si el usuario no está autenticado.
         """
-        serializer = RefreshTokenSerializer(data=request.data)
-        if serializer.is_valid():
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Eliminar el token del usuario autenticado
+            request.user.auth_token.delete()
+            return Response({"message": "Sesión cerrada correctamente."}, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({"error": "No se pudo cerrar la sesión.", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     

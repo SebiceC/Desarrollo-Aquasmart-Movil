@@ -11,6 +11,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import api from "../services/api";
 import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { AlertCustom } from "../components/AlertCustom";
 
 export default function TokenValidationScreen() {
   const navigation = useNavigation();
@@ -43,16 +44,24 @@ export default function TokenValidationScreen() {
       });
       console.log("[Token] Respuesta:", response.data);
 
-      if (response.data.access) {
-        Alert.alert("Éxito", "Validación exitosa");
-        navigation.navigate("Home");
+      if (response.status === 200) {
+        console.log("Redirigiendo a HomeScreen...");
+        if (route.params?.isPasswordRecovery) {
+          // Navegar a cambio de contraseña
+          navigation.navigate("PasswordChange", { 
+            document: document,
+            token: tokenString
+          });
+        } else {
+          navigation.replace("Home");
+        }
+        navigation.replace("Home");
       }
     } catch (error) {
       console.error("[Token] Error:", error);
-      setAlertMessage(
-        error.response?.data?.message || "Código incorrecto"
-      );
+      setAlertMessage(error.response?.data?.message || "Código incorrecto");
       setShowCustomAlert(true);
+      setTimeout(() => setShowCustomAlert(false), 5000);
     }
   };
 
@@ -60,13 +69,23 @@ export default function TokenValidationScreen() {
     console.log("[Token] Reenviando token...");
     setIsResending(true);
     try {
-      await api.post("/users/generate-otp", { document: document });
+      await api.post("/users/generate-otp", {
+        document: document,
+        phone: route.params.phone
+      });
       console.log("[Token] Token reenviado");
+
       setTimeLeft(900);
+      setToken(["", "", "", "", "", ""]); // Limpia los campos de token
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus(); // Enfoca el primer campo de entrada
+      }
       Alert.alert("Éxito", "Nuevo código enviado");
     } catch (error) {
       console.error("[Token] Error:", error);
-      Alert.alert("Error", "No se pudo reenviar el código");
+      setAlertMessage(error.response?.data?.message || "Error al reenviar el token");
+      setShowCustomAlert(true);
+      setTimeout(() => setShowCustomAlert(false), 5000);
     } finally {
       setIsResending(false);
     }
@@ -270,8 +289,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
   },
   alertText: {
     color: "#757777",
@@ -282,4 +299,4 @@ const styles = StyleSheet.create({
   alertIcon: {
     marginHorizontal: 5,
   },
-})
+});

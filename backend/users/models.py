@@ -81,8 +81,8 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=50, db_index=True, verbose_name="Nombre")
     last_name = models.CharField(max_length=50, db_index=True, verbose_name="Apellido")
     email = models.EmailField(unique=True, db_index=True, verbose_name="Correo Electrónico")
-    document_type = models.ForeignKey('DocumentType', on_delete=models.CASCADE, related_name="document_type", null=True, db_index=True, verbose_name="Tipo de Documento")
-    person_type = models.ForeignKey('PersonType', on_delete=models.CASCADE, related_name="person_type", null=True, db_index=True, verbose_name="Tipo de Persona")
+    document_type = models.ForeignKey('DocumentType', on_delete=models.CASCADE, related_name="users_with_document_type", null=True, db_index=True, verbose_name="Tipo de Documento")
+    person_type = models.ForeignKey('PersonType', on_delete=models.CASCADE, related_name="users_with_person_type", null=True, db_index=True, verbose_name="Tipo de Persona")
     phone = models.CharField(max_length=20, db_index=True, verbose_name="Teléfono")
     address = models.CharField(max_length=200, db_index=True, verbose_name="Dirección")
     is_registered = models.BooleanField(default=False, help_text="Indica si el usuario completó el pre-registro", db_index=True, verbose_name="Registrado")
@@ -199,16 +199,16 @@ class LoginRestriction(models.Model):
             message = "Último intento antes de ser bloqueado."
         elif self.attempts >= 5:
             self.block_user()
-            message = "Usuario bloqueado por 24 horas."
+            message = "Usuario bloqueado por 30 minutos."
         else:
-            message = "Intento fallido registrado."
+            message = "Credenciales inválidas."
         
         self.save()
         return message
     
     def block_user(self):
         """Bloquea al usuario por 24 horas"""
-        self.blocked_until = now() + timedelta(hours=24)
+        self.blocked_until = now() + timedelta(hours=0.5)
         self.attempts = 0  # Reiniciar intentos
         self.save()
     

@@ -25,7 +25,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'django-insecure-^^^-)t#5(#p4#g*7j$#yvgo0bb4zzmm6-@15y41k^4+m!x#jg4'
 SECRET_KEY = os.environ.get('SECRET_KEY', default=os.getenv("SECRET_KEY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -47,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'drf_spectacular',
+    'rest_framework.authtoken',
     'rest_framework',
     'users',
     'iot',
@@ -160,21 +160,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
     
-}
-SIMPLE_JWT = {
-    'USER_ID_FIELD': 'document',  # Cambia 'document' por el nombre del campo identificador en tu modelo
-    'USER_ID_CLAIM': 'user_id', # Nombre de la clave que se incluirá en el token
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': False,
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -183,12 +175,12 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 CORS_ALLOWED_ORIGINS = [
     "https://tu-frontend.com",
     "http://localhost:5173",  # Para desarrollo con React
-    "http://localhost:8081", # Para desarrollo con React Native con Expo
-    "exp://192.168.1.11:8081"
+    "http://localhost:8081",
+    "https://desarrollo-aqua-smart-frontend-mu.vercel.app",
 ]
 
 # También puedes permitir todas las solicitudes (NO recomendado en producción)
-CORS_ALLOW_ALL_ORIGINS = True  # O usar CORS_ALLOWED_ORIGINS para mayor control
+#CORS_ALLOW_ALL_ORIGINS = True  # O usar CORS_ALLOWED_ORIGINS para mayor control
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "AQUASMART",
