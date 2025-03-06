@@ -4,9 +4,8 @@ from API.sendmsn import send_sms_recover
 from .models import DocumentType, PersonType, CustomUser, LoginHistory, Otp
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
-from rest_framework_simplejwt.tokens import RefreshToken
 from .validate import validate_user,validate_otp
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound,PermissionDenied
 from django.contrib.auth.signals import user_logged_in
 from django.utils import timezone
 from .models import LoginRestriction
@@ -46,9 +45,45 @@ class CustomUserSerializer(serializers.ModelSerializer):
         fields = [
             'document', 'first_name', 'last_name', 'email', 
             'document_type', 'person_type', 'phone', 'address',
-            'password','is_registered', 'is_active',
+            'password', 'is_registered', 'is_active',
         ]
-        read_only_fields = ('isRegistered', 'is_active')       
+        read_only_fields = ('is_registered', 'is_active')
+        
+        extra_kwargs = {
+            'document': {'validators': []},
+            'email': {'validators': []},
+        }
+
+    def validate_document(self, value):
+        """
+        Valida si el documento ya existe, si es solo numérico y maneja los mensajes personalizados.
+        """
+        if not value.isdigit():
+            raise serializers.ValidationError("El documento debe contener solo números.")
+
+        existing_user = CustomUser.objects.filter(document=value).first()
+        if existing_user:
+            if not existing_user.is_registered:
+                raise serializers.ValidationError("Ya tienes un pre-registro activo.")
+            else:
+                raise serializers.ValidationError("El usuario ya pasó el pre-registro.")
+        return value
+
+    def validate_phone(self, value):
+        """
+        Valida que el número de teléfono solo contenga números.
+        """
+        if not value.isdigit():
+            raise serializers.ValidationError("El teléfono debe contener solo números.")
+        return value
+
+    def validate_email(self, value):
+        """
+        Valida si el email ya existe y maneja el mensaje personalizado.
+        """
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Este correo ya está registrado.")
+        return value
 
     def create(self, validated_data):
         """
@@ -83,7 +118,7 @@ class LoginSerializer(serializers.Serializer):
             raise NotFound({'details': 'User not found'})
 
         if not user.is_active:
-            raise serializers.ValidationError({"detail": "Your account is inactive. Please contact support."})
+            raise PermissionDenied({"detail": "Your account is inactive. Please contact support."})
 
         if not user.is_registered:
             raise serializers.ValidationError({"detail": "User is waiting to pass pre-registration. Please contact support for more information."})
@@ -181,7 +216,7 @@ class GenerateOtpLoginSerializer(serializers.Serializer):
 
         return {
             'otp': otp_generado,
-            'message': 'Se ha enviado un correo con el OTP para recuperar la contraseña.'
+            'message': 'Se ha enviado un msn con el OTP para poder iniciar sesión.'
         }     
         
 class GenerateOtpPasswordRecoverySerializer(serializers.Serializer):
@@ -434,43 +469,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         # Eliminar todos los OTP validados del usuario
         Otp.objects.filter(user=user, is_validated=True).delete()
 
-        return user
-    
-class RefreshTokenSerializer(serializers.Serializer):
-    """
-    Serializador para la renovación de tokens de autenticación.
-
-    Permite a los usuarios obtener un nuevo token de acceso (`access token`)
-    a partir de un `refresh token` válido.
-
-    Campos:
-    - `refresh` (str): Token de actualización enviado por el cliente.
-
-    Respuestas:
-    - Si el token es válido, retorna un nuevo `access token`.
-    - Si el token es inválido o ha expirado, genera un error de validación.
-    """
-
-    refresh = serializers.CharField(help_text="Token de actualización proporcionado por el usuario.")
-
-    def validate(self, data):
-        """
-        Valida el token de actualización y genera un nuevo token de acceso.
-
-        Parámetros:
-        - `data` (dict): Contiene el `refresh token`.
-
-        Retorno:
-        - `dict`: Diccionario con un nuevo `access token`.
-
-        Excepciones:
-        - `serializers.ValidationError`: Si el token es inválido o ha expirado.
-        """
-        try:
-            refresh = RefreshToken(data["refresh"])
-            return {"access": str(refresh.access_token)}
-        except Exception:
-            raise serializers.ValidationError("Token inválido o expirado.")   
+        return user  
         
         
 class UserProfileSerializer(serializers.ModelSerializer):

@@ -9,44 +9,53 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { Image } from "react-native";
 import api from "../services/api";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const PasswordChangeSchema = yup.object().shape({
   document: yup
     .string()
-    .matches(/^\d{6,12}$/, "Cédula inválida")
-    .required("Campo obligatorio"),
-  nuevaContraseña: yup
+    .required("Campo obligatorio")
+    .matches(/^\d{6,12}$/, "Cédula inválida"),
+  new_password: yup
     .string()
+    .required("Campo obligatorio")
     .min(8, "Mínimo 8 caracteres")
     .max(20, "Máximo 20 caracteres")
     .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
     .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
-    .matches(/[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/, "Debe contener al menos un carácter especial")
-    .required("Campo obligatorio"),
-  confirmarContraseña: yup
+    .matches(/[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/, "Debe contener al menos un carácter especial"),
+  confirmPassword: yup
     .string()
-    .oneOf([yup.ref("nuevaContraseña"), null], "Las contraseñas no coinciden")
-    .required("Campo obligatorio"),
+    .required("Campo obligatorio")
+    .oneOf([yup.ref("new_password"), null], "Las contraseñas no coinciden")
+   ,
 });
 
 export default function PasswordChangeScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(PasswordChangeSchema),
+    defaultValues: {
+      document: route.params?.document || "" // 2. Obtener documento de parámetros
+    },
   });
 
   const [isLoading, setIsLoading] = useState(false);
+
   const [buttonColor, setButtonColor] = useState("#365486"); 
   const [showPasswordNueva, setShowPasswordNueva] = useState(false); 
-  const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false); 
+  const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false);
+  const [showCustomAlert, setShowCustomAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(""); 
 
   const onSubmit = async (data) => {
     console.log("[PasswordChange] Datos enviados:", data);
@@ -54,20 +63,18 @@ export default function PasswordChangeScreen() {
 
     try {
       const response = await api.post("/users/reset-password", {
-        document: route.params.document,
-        new_password: data.nuevaContraseña
+       document: data.document,
+        new_password: data.new_password
       });
       
-      console.log("[PasswordChange] Respuesta del backend:", response);
+      console.log("[PasswordChange] Respuesta del backend:", response.data);
 
-      if (response.document) {
-        navigation.navigate("TokenValidationScreen", {
-          document: response.document,
-          phone: response.phone,
-        });
-      } else {
-        console.log("Error al cambiar la contraseña");
-      }
+      navigation.navigate("Login");
+      setAlertMessage("¡Contraseña actualizada exitosamente!");
+      setShowCustomAlert(true);
+      setTimeout(() => setShowCustomAlert(false), 3000);
+
+
     } catch (error) {
       console.error("[PasswordChange] Error completo:", error);
     } finally {
@@ -84,7 +91,13 @@ export default function PasswordChangeScreen() {
         />
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
       </View>
-
+      {showCustomAlert && (
+        <View style={styles.customAlert}>
+          <Icon name="warning" size={20} color="#757777" />
+          <Text style={styles.alertText}>{alertMessage}</Text>
+          <Icon name="warning" size={20} color="#757777" />
+        </View>
+      )}
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.titulo}>CAMBIO DE CONTRASEÑA</Text>
 
@@ -96,7 +109,7 @@ export default function PasswordChangeScreen() {
             <View style={styles.passwordInputContainer}>
               <Controller
                 control={control}
-                name="nuevaContraseña"
+                name="new_password"
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     style={styles.input}
@@ -117,8 +130,8 @@ export default function PasswordChangeScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-            {errors.nuevaContraseña && (
-              <Text style={styles.error}>{errors.nuevaContraseña.message}</Text>
+            {errors.new_password && (
+              <Text style={styles.error}>{errors.new_password.message}</Text>
             )}
           </View>
 
@@ -129,7 +142,7 @@ export default function PasswordChangeScreen() {
             <View style={styles.passwordInputContainer}>
               <Controller
                 control={control}
-                name="confirmarContraseña"
+                name="confirmPassword"
                 render={({ field: { onChange, value } }) => (
                   <TextInput
                     style={styles.input}
@@ -150,8 +163,8 @@ export default function PasswordChangeScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-            {errors.confirmarContraseña && (
-              <Text style={styles.error}>{errors.confirmarContraseña.message}</Text>
+            {errors.confirmPassword && (
+              <Text style={styles.error}>{errors.confirmPassword.message}</Text>
             )}
           </View>
         </View>

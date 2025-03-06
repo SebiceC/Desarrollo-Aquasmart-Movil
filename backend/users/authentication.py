@@ -4,10 +4,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from .models import Otp,CustomUser
-from .serializers import  GenerateOtpPasswordRecoverySerializer, ValidateOtpSerializer, ResetPasswordSerializer, LoginSerializer, RefreshTokenSerializer
-from rest_framework.exceptions import ValidationError, NotFound
+from .serializers import  GenerateOtpPasswordRecoverySerializer, ValidateOtpSerializer, ResetPasswordSerializer, LoginSerializer
+from rest_framework.exceptions import ValidationError, NotFound,PermissionDenied
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
+from API.custom_auth import CustomTokenAuthentication
 class LoginView(APIView):
     """
     Vista para el inicio de sesión de usuarios.
@@ -74,6 +75,8 @@ class LoginView(APIView):
             return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except NotFound as e:
             return Response({"error": e.detail}, status=status.HTTP_404_NOT_FOUND)
+        except PermissionDenied as e:
+            return Response({"error": e.detail}, status=status.HTTP_403_FORBIDDEN) 
         except Exception as e:
             return Response({"error": "Unexpected error.", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
 
@@ -120,7 +123,7 @@ class GenerateOtpView(APIView):
         except ValidationError as e:
             return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except NotFound as e:
-            return Response({"error": e.detail}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": e.detail}, status=status.HTTP_404_NOT_FOUND)        
         except Exception as e:
             return Response({"error": "Unexpected error.", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -226,6 +229,11 @@ class LogoutView(APIView):
         - `200 OK`: Si el cierre de sesión es exitoso.
         - `401 UNAUTHORIZED`: Si el usuario no está autenticado.
         """
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "No estás autenticado. Por favor, inicia sesión."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         try:
             # Eliminar el token del usuario autenticado
@@ -234,5 +242,27 @@ class LogoutView(APIView):
         
         except Exception as e:
             return Response({"error": "No se pudo cerrar la sesión.", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
+class ValidateTokenView(APIView):
+    authentication_classes = [CustomTokenAuthentication]
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """
+        Verifica si el token en la cabecera es válido.
+        Si el token no existe o no coincide con el del usuario, se devuelve un error.
+        """
+        user = request.user
+        print(user)
+        try:
+            user_token = Token.objects.get(user=user)
+
+            # El token ya fue validado por TokenAuthentication, así que no es necesario compararlo manualmente
+            return Response({"detail": "Sesión valida."}, status=status.HTTP_200_OK)
+
+        except Token.DoesNotExist:
+            return Response(
+                {"detail": "Su sesión se cerró."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
     

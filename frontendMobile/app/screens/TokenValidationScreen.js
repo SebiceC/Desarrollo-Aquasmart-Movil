@@ -11,7 +11,8 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import api from "../services/api";
 import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { AlertCustom } from "../components/AlertCustom";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function TokenValidationScreen() {
   const navigation = useNavigation();
@@ -41,21 +42,30 @@ export default function TokenValidationScreen() {
       const response = await api.post("/users/validate-otp", {
         document: document,
         otp: tokenString,
+      },
+      {
+        headers: {
+          Authorization: undefined, // Elimina el token si existe
+        },
       });
       console.log("[Token] Respuesta:", response.data);
+      
 
       if (response.status === 200) {
-        console.log("Redirigiendo a HomeScreen...");
+        const { token: authToken } = response.data;
+
         if (route.params?.isPasswordRecovery) {
+          console.log("Redirigiendo a Cambio de contraseña...");
           // Navegar a cambio de contraseña
-          navigation.navigate("PasswordChange", { 
+          navigation.replace("PasswordChange", { 
             document: document,
             token: tokenString
           });
         } else {
+          await AsyncStorage.setItem('authToken', response.data.token);
+          console.log("Redirigiendo a HomeScreen...");
           navigation.replace("Home");
         }
-        navigation.replace("Home");
       }
     } catch (error) {
       console.error("[Token] Error:", error);

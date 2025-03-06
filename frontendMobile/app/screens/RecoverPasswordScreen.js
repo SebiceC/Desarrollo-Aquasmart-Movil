@@ -17,9 +17,14 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const RecoverPasswordSchema = yup.object().shape({
   document: yup
     .string()
-    .matches(/^\d{6,12}$/, "Cédula inválida")
-    .required("Campo obligatorio"),
-  telefono: yup.string().required("Campo obligatorio"),
+    .required("Campo obligatorio")
+    .matches(/^\d{6,12}$/, "Cédula inválida"),
+  phone: yup
+    .string()
+    .required("Campo obligatorio")
+    .min(10, "Mínimo 10 dígitos")
+    .max(15, "Máximo 15 dígitos")
+    .matches(/^[0-9]+$/, "Solo números permitidos"),
 });
 
 export default function RecoverPasswordScreen() {
@@ -42,7 +47,7 @@ export default function RecoverPasswordScreen() {
   const [showCustomAlert, setShowCustomAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
-  // Función que se ejecuta al enviar el formulario
+  
   const onSubmit = async (data) => {
     console.log("[RecoverPassword] Iniciando envío...", data);
     setIsLoading(true);
@@ -55,7 +60,7 @@ export default function RecoverPasswordScreen() {
 
       console.log("[RecoverPassword] Respuesta exitosa:", response.data);
 
-      navigation.navigate("TokenValidation", {
+      navigation.navigate("TokenValidationScreen", {
         document: data.document,
         phone: data.phone,
         isPasswordRecovery: true,
@@ -153,13 +158,18 @@ export default function RecoverPasswordScreen() {
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.input}
-                  placeholder="Ingresa tu teléfono"
+                  placeholder="Ingresa tu teléfono | Ej: 3012345678"
                   placeholderTextColor="#A0AEC0"
+                  keyboardType="phone-pad"
                   onChangeText={onChange}
                   value={value}
+                  maxLength={15}
                 />
               )}
             />
+            {errors.phone && (
+              <Text style={styles.error}>{errors.phone.message}</Text>
+            )}
           </View>
         </View>
 

@@ -1,7 +1,7 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import LoginScreen from "../screens/LoginScreen";
 import TokenValidationScreen from "../screens/TokenValidationScreen";
-import Home from "../screens/ProfileScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 import RecoverPasswordScreen from "../screens/RecoverPasswordScreen";
 import PasswordChangeScreen from "../screens/PasswordChangeScreen";
 
@@ -14,11 +14,8 @@ export default function AppNavigator() {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen
-        name="TokenValidationScreen"
-        component={TokenValidationScreen}
-      />
-      <Stack.Screen name="Home" component={Home} />
+      <Stack.Screen name="TokenValidationScreen" component={TokenValidationScreen}/>
+      <Stack.Screen name="Home" component={ProfileScreen} />
       <Stack.Screen name="RecoverPassword" component={RecoverPasswordScreen} />
       <Stack.Screen name="PasswordChange" component={PasswordChangeScreen} />
     </Stack.Navigator>

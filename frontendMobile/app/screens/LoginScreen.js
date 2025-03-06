@@ -14,6 +14,8 @@ import { login } from "../services/authService";
 import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { AlertCustom } from "../components/AlertCustom";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const loginSchema = yup.object().shape({
   document: yup
@@ -51,6 +53,9 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
+
+      await AsyncStorage.removeItem('authToken');
+
       const response = await login(data);
       console.log("[Login] Respuesta del backend:", response);
 
@@ -67,10 +72,13 @@ export default function LoginScreen() {
         error.response?.data?.message || "Credenciales incorrectas",
       );
       setShowCustomAlert(true); // Mostrar alerta
-      setTimeout(() => setShowCustomAlert(false), 5000);
+      setTimeout(() => setShowCustomAlert(false), 8000);
       if (error.message.startsWith("Último intento")) {
         message =
           "¡Último intento! Si falla nuevamente, su cuenta será bloqueada por 1 hora.";
+        showAlert(message);
+      } else if (error.message.startsWith("Usuario bloqueado")) {
+        message = "Usuario bloqueado por 1 hora";
         showAlert(message);
       }
     } finally {

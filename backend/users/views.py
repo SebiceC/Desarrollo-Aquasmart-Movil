@@ -28,6 +28,13 @@ class CustomUserCreateView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = []  # Sin restricciones de acceso (puede ser cambiado según necesidad)
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        user = response.data
+        return Response(
+            {"message": f"El usuario {user['document']} - {user['first_name']} {user['last_name']} se ha pre-registrado con éxito"},
+            status=status.HTTP_201_CREATED
+        )
     
 @extend_schema_view(
     post =extend_schema(

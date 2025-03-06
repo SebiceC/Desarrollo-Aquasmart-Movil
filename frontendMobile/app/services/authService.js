@@ -1,8 +1,11 @@
 import api from "./api";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const login = async (credentials) => {
   try {
     const response = await api.post("/users/login", credentials);
+
+    await AsyncStorage.setItem('authToken', response.data.token); 
     return response.data;
   } catch (error) {
     // Capturar errores de red
@@ -19,6 +22,7 @@ export const login = async (credentials) => {
 export const validateOtp = async (data) => {
   try {
     const response = await api.post("/users/validate-otp", data);
+    await AsyncStorage.setItem('authToken', response.data.token);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Token inválido");
