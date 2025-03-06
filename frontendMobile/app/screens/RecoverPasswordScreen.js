@@ -11,6 +11,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
+import api from "../services/api";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const RecoverPasswordSchema = yup.object().shape({
   document: yup
@@ -21,57 +23,100 @@ const RecoverPasswordSchema = yup.object().shape({
 });
 
 export default function RecoverPasswordScreen() {
-  const navigation = useNavigation();
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(RecoverPasswordSchema),
+    defaultValues: {
+      document: "",
+      phone: "",
+    },
   });
 
+  const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
   const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
 
+  const [showCustomAlert, setShowCustomAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
   // Función que se ejecuta al enviar el formulario
   const onSubmit = async (data) => {
-    console.log("[RecoverPassword] Datos enviados:", data);
+    console.log("[RecoverPassword] Iniciando envío...", data);
     setIsLoading(true);
 
     try {
-      // Llamada a la función para recuperar la contraseña (esto debería ser una función definida)
-      const response = await RecoverPassword(data);
-      console.log("[RecoverPassword] Respuesta del backend:", response);
+      const response = await api.post("/users/generate-otp", {
+        document: data.document,
+        phone: data.phone,
+      });
 
-      if (response.document) {
-        navigation.navigate("TokenValidationScreen", {
-          document: response.document,
-          phone: response.phone,
-        });
-      } else {
-        console.log("Error al recuperar contraseña");
-      }
+      console.log("[RecoverPassword] Respuesta exitosa:", response.data);
+
+      navigation.navigate("TokenValidation", {
+        document: data.document,
+        phone: data.phone,
+        isPasswordRecovery: true,
+      });
     } catch (error) {
-      console.error("[RecoverPassword] Error completo:", error);
+      console.error("[RecoverPassword] Error completo:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+
+      const errorMessage =
+        error.response?.data?.error?.detail ||
+        error.response?.data?.detail ||
+        "Error al procesar la solicitud";
+
+      setAlertMessage(errorMessage);
+      setShowCustomAlert(true);
+
+      setTimeout(() => setShowCustomAlert(false), 5000);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.logoContainer}>
         <Image
-          source={require('../assets/img_M1/logo.png')}
+          source={require("../assets/img_M1/logo.png")}
           style={styles.logo}
         />
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
       </View>
 
+      {showCustomAlert && (
+        <View style={styles.customAlert}>
+          <Icon
+            name="warning"
+            size={20}
+            color="#757777"
+            style={styles.alertIcon}
+          />
+          <Text style={styles.alertText}>{alertMessage}</Text>
+          <Icon
+            name="warning"
+            size={20}
+            color="#656767"
+            style={styles.alertIcon}
+          />
+        </View>
+      )}
+
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.titulo}>RECUPERACIÓN DE CONTRASEÑA</Text>
         <Text style={styles.subtitle}>
-          Introduce tu cédula de ciudadanía y teléfono, para solicitar un token y recuperar tu contraseña.
+          Introduce tu cédula de ciudadanía y teléfono, para solicitar un token
+          y recuperar tu contraseña.
         </Text>
 
         <View style={styles.formulario}>
@@ -93,7 +138,9 @@ export default function RecoverPasswordScreen() {
                 />
               )}
             />
-            {errors.document && <Text style={styles.error}>{errors.document.message}</Text>}
+            {errors.document && (
+              <Text style={styles.error}>{errors.document.message}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -102,7 +149,7 @@ export default function RecoverPasswordScreen() {
             </Text>
             <Controller
               control={control}
-              name="telefono"
+              name="phone"
               render={({ field: { onChange, value } }) => (
                 <TextInput
                   style={styles.input}
@@ -113,7 +160,6 @@ export default function RecoverPasswordScreen() {
                 />
               )}
             />
-            {errors.telefono && <Text style={styles.error}>{errors.telefono.message}</Text>}
           </View>
         </View>
 
@@ -184,11 +230,6 @@ const styles = {
     fontSize: 16,
     color: "#2D3748",
   },
-  error: {
-    color: "#E53E3E",
-    fontSize: 12,
-    marginTop: 4,
-  },
   boton: {
     height: 48,
     width: "60%",
@@ -220,5 +261,24 @@ const styles = {
     fontSize: 24,
     fontWeight: "bold",
     color: "#000000",
+  },
+  customAlert: {
+    backgroundColor: "#FFA7A9",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    flexDirection: "row",
+  },
+  alertText: {
+    color: "#757777",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginHorizontal: 10,
+  },
+  alertIcon: {
+    marginHorizontal: 5,
   },
 };

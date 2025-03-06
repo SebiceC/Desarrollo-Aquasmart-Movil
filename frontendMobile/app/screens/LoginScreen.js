@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { login } from "../services/authService";
 import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { AlertCustom } from "../components/AlertCustom";
 
 const loginSchema = yup.object().shape({
   document: yup
@@ -34,8 +35,16 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
+
   const [showCustomAlert, setShowCustomAlert] = useState(false); // Estado para mostrar la alerta personalizada
   const [alertMessage, setAlertMessage] = useState(""); // Estado para el mensaje de la alerta
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertCustomMessage, setAlertCustomMessage] = useState("");
+
+  const showAlert = (message) => {
+    setAlertCustomMessage(message);
+    setAlertVisible(true);
+  };
 
   const onSubmit = async (data) => {
     console.log("[Login] Datos enviados:", data);
@@ -52,11 +61,18 @@ export default function LoginScreen() {
         });
       }
     } catch (error) {
-      console.error("[Login] Error completo:", error);
+      let message = "";
+      console.error("[Login] Error capturado:", error.message);
       setAlertMessage(
-        error.response?.data?.message || "Credenciales incorrectas"
+        error.response?.data?.message || "Credenciales incorrectas",
       );
       setShowCustomAlert(true); // Mostrar alerta
+      setTimeout(() => setShowCustomAlert(false), 5000);
+      if (error.message.startsWith("Último intento")) {
+        message =
+          "¡Último intento! Si falla nuevamente, su cuenta será bloqueada por 1 hora.";
+        showAlert(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +112,12 @@ export default function LoginScreen() {
             />
           </View>
         )}
+
+<AlertCustom
+          visible={alertVisible}
+          message={alertCustomMessage}
+          onClose={() => setAlertVisible(false)}
+        />
 
         <View style={styles.formulario}>
           <View style={styles.inputContainer}>

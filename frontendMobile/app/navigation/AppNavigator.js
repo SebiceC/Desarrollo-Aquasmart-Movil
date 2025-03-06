@@ -2,7 +2,6 @@ import { createStackNavigator } from "@react-navigation/stack";
 import LoginScreen from "../screens/LoginScreen";
 import TokenValidationScreen from "../screens/TokenValidationScreen";
 import Home from "../screens/Home";
-import PreRegisterScreen from "../screens/PreRegisterScreen"; 
 import RecoverPasswordScreen from "../screens/RecoverPasswordScreen"; 
 import PasswordChangeScreen from "../screens/PasswordChangeScreen"; 
 
@@ -27,10 +26,6 @@ export default function AppNavigator() {
       <Stack.Screen
         name="PasswordChange"  
         component={PasswordChangeScreen}
-      />
-      <Stack.Screen
-        name="PreRegister"  
-        component={PreRegisterScreen}
       />
     </Stack.Navigator>
   );
