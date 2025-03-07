@@ -14,15 +14,35 @@ import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
-
 // Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
-  nombre: yup.string().max(20, "Máximo 20 caracteres").required("Campo obligatorio"),
-  apellido: yup.string().max(20, "Máximo 20 caracteres").required("Campo obligatorio"),
-  identificacion: yup.string().matches(/^\d{6,12}$/, "Debe tener entre 6 y 12 dígitos").required("Campo obligatorio"),
-  direccion: yup.string().max(30, "Máximo 30 caracteres").required("Campo obligatorio"),
-  telefono: yup.string().matches(/^\d{7,13}$/, "Debe tener entre 7 y 13 dígitos").required("Campo obligatorio"),
-  email: yup.string().email("Correo inválido").max(50, "Máximo 50 caracteres").required("Campo obligatorio"),
+  nombre: yup
+  .string()
+  .required("Campo obligatorio")
+  .matches(/^[A-Za-zÁ-ÿ\s]+$/, "Solo se permiten letras y espacios") // Validación para solo letras y espacios
+  .max(20, "Máximo 20 caracteres"),
+  apellido: yup
+    .string()
+    .required("Campo obligatorio")
+    .matches(/^[A-Za-zÁ-ÿ\s]+$/, "Solo se permiten letras y espacios") // Validación para solo letras y espacios
+    .max(20, "Máximo 20 caracteres"),
+  identificacion: yup
+    .string()
+    .matches(/^\d{6,12}$/, "Debe tener entre 6 y 12 dígitos")
+    .required("Campo obligatorio"),
+  direccion: yup
+    .string()
+    .max(30, "Máximo 30 caracteres")
+    .required("Campo obligatorio"),
+  telefono: yup
+    .string()
+    .matches(/^\d{7,13}$/, "Debe tener entre 7 y 13 dígitos")
+    .required("Campo obligatorio"),
+  email: yup
+    .string()
+    .email("Correo inválido")
+    .max(50, "Máximo 50 caracteres")
+    .required("Campo obligatorio"),
   Contraseña: yup
     .string()
     .min(8, "Mínimo 8 caracteres")
@@ -30,9 +50,15 @@ const PreRegisterSchema = yup.object().shape({
     .matches(/[A-Z]/, "Debe contener al menos una mayúscula")
     .matches(/[a-z]/, "Debe contener al menos una minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
-    .matches(/[!@#$%^&*()_+\-=\{}|\:;"'<>,.?/]/, "Debe contener un carácter especial")
+    .matches(
+      /[!@#$%^&*()_+\-=\{}|\:;"'<>,.?/]/,
+      "Debe contener un carácter especial"
+    )
     .required("Campo obligatorio"),
-  confirmarContraseña: yup.string().oneOf([yup.ref("Contraseña"), null], "Las contraseñas no coinciden").required("Campo obligatorio"),
+  confirmarContraseña: yup
+    .string()
+    .oneOf([yup.ref("Contraseña"), null], "Las contraseñas no coinciden")
+    .required("Campo obligatorio"),
   tipoIdentificacion: yup.string().required("Campo obligatorio"),
   tipoPersona: yup.string().required("Campo obligatorio"),
 });
@@ -44,6 +70,7 @@ export default function PreRegisterScreen() {
   const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false); // Estado para Confirmar Contraseña
   const [documentTypes, setDocumentTypes] = useState([]);
   const [personTypes, setPersonTypes] = useState([]);
+  const [showAlert, setShowAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
   const {
@@ -53,55 +80,51 @@ export default function PreRegisterScreen() {
   } = useForm({
     resolver: yupResolver(PreRegisterSchema),
   });
-
-
-
-
-
- // useEffect(() => {
-   // async function fetchTypes() {
-     // try {
-       // const docRes = await fetch("http://127.0.0.1:8000/admin/document-type");
-        //const personRes = await fetch("http://127.0.0.1:8000/admin/person-type");
-       // const docData = await docRes.json();
-        //const personData = await personRes.json();
-        //setDocumentTypes(docData);
-        //setPersonTypes(personData);
-      //} catch (error) {
-        //console.error("Error al cargar los tipos de datos:", error);
-      //}
-    //}
-    //fetchTypes();
-  //}, []);
+  const [alertStates, setAlertStates] = useState({
+    nombre: false,
+    apellido: false,
+    identificacion: false,
+    telefono: false,
+    direccion: false,
+    email: false,
+  });
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/users/pre-register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          document: data.identificacion,
-          first_name: data.nombre,
-          last_name: data.apellido,
-          email: data.email,
-          document_type: data.tipoIdentificacion,
-          person_type: data.tipoPersona,
-          phone: data.telefono,
-          address: data.direccion,
-          password: data.Contraseña,
-        }),
-      });
-
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/users/pre-register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            document: data.identificacion,
+            first_name: data.nombre,
+            last_name: data.apellido,
+            email: data.email,
+            document_type: data.tipoIdentificacion,
+            person_type: data.tipoPersona,
+            phone: data.telefono,
+            address: data.direccion,
+            password: data.Contraseña,
+          }),
+        }
+      );
       const result = await response.json();
+      console.log("Respuesta del backend:", result);
       if (response.ok) {
-        Alert.alert("Registro exitoso", "El usuario ha sido pre-registrado exitosamente.", [
-          { text: "OK", onPress: () => navigation.navigate("Login") },
-        ]);
+        Alert.alert(
+          "Registro exitoso",
+          "El usuario ha sido pre-registrado exitosamente.",
+          [{ text: "OK", onPress: () => navigation.navigate("Login") }]
+        );
       } else {
-        Alert.alert("Error en el registro", result.message || "Hubo un problema en el pre-registro.");
+        Alert.alert(
+          "Error en el registro",
+          result.message || "Hubo un problema en el pre-registro."
+        );
       }
     } catch (error) {
       Alert.alert("Error", "No se pudo conectar con el servidor.");
@@ -128,6 +151,7 @@ export default function PreRegisterScreen() {
         <Text style={styles.titulo}>PRE REGISTRO</Text>
 
         <View style={styles.formulario}>
+          {/* NOMBRE */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Nombres<Text style={{ color: "red" }}> *</Text>
@@ -141,24 +165,31 @@ export default function PreRegisterScreen() {
                   placeholder="Ingresa tus nombres"
                   placeholderTextColor="#A0AEC0"
                   onChangeText={(text) => {
+                    onChange(text); // Permitir que el usuario siga escribiendo
                     if (text.length > 20) {
-                      Alert.alert(
-                        "Límite de caracteres",
-                        "Máximo 20 caracteres permitidos."
-                      );
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        nombre: true,
+                      })); // Mostrar alerta para 'nombre' si se excede el límite
                     } else {
-                      onChange(text);
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        nombre: false,
+                      })); // Ocultar alerta si está dentro del límite
                     }
                   }}
                   value={value}
                 />
               )}
             />
-            {errors.nombre && (
+            {errors.nombre && !alertStates.nombre && (
               <Text style={styles.error}>{errors.nombre.message}</Text>
             )}
+            {alertStates.nombre && (
+              <Text style={styles.error}>Máximo 20 caracteres permitidos.</Text>
+            )}
           </View>
-
+          {/* APELLIDO */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Apellidos<Text style={{ color: "red" }}> *</Text>
@@ -172,24 +203,31 @@ export default function PreRegisterScreen() {
                   placeholder="Ingresa tus apellidos"
                   placeholderTextColor="#A0AEC0"
                   onChangeText={(text) => {
+                    onChange(text);
                     if (text.length > 20) {
-                      Alert.alert(
-                        "Límite de caracteres",
-                        "Máximo 20 caracteres permitidos."
-                      );
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        apellido: true,
+                      }));
                     } else {
-                      onChange(text);
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        apellido: false,
+                      }));
                     }
                   }}
                   value={value}
                 />
               )}
             />
-            {errors.apellido && (
+            {errors.apellido && !alertStates.apellido && (
               <Text style={styles.error}>{errors.apellido.message}</Text>
             )}
+            {alertStates.apellido && (
+              <Text style={styles.error}>Máximo 20 caracteres permitidos.</Text>
+            )}
           </View>
-
+          {/* TIPO IDENTIFICACION */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Selecciona el tipo de identificación
@@ -201,10 +239,9 @@ export default function PreRegisterScreen() {
               render={({ field: { onChange, value } }) => (
                 <View style={styles.pickerContainer}>
                   <Picker selectedValue={value} onValueChange={onChange}>
-                  <Picker.Item label="Seleccione una opción" value="" />
-                    
-                    
-                  <Picker.Item label="Cédula de ciudadanía (CC)" value="CC" />
+                    <Picker.Item label="Seleccione una opción" value="" />
+
+                    <Picker.Item label="Cédula de ciudadanía (CC)" value="CC" />
                     <Picker.Item
                       label="Cédula de extranjería (CE)"
                       value="CE"
@@ -217,17 +254,17 @@ export default function PreRegisterScreen() {
                       label="Documento de identificación extranjero (DIE)"
                       value="DIE"
                     />
-              </Picker>
-            </View>
-            )}
-        />
+                  </Picker>
+                </View>
+              )}
+            />
             {errors.tipoIdentificacion && (
               <Text style={styles.error}>
                 {errors.tipoIdentificacion.message}
               </Text>
             )}
           </View>
-          
+          {/* IDENTIFICACION */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Identificación<Text style={{ color: "red" }}> *</Text>
@@ -242,26 +279,32 @@ export default function PreRegisterScreen() {
                   placeholderTextColor="#A0AEC0"
                   keyboardType="numeric"
                   onChangeText={(text) => {
-                    // Filtrar solo números y limitar a 15 caracteres
                     const numericText = text.replace(/[^0-9]/g, "");
+                    onChange(numericText);
                     if (numericText.length > 15) {
-                      Alert.alert(
-                        "Límite de caracteres",
-                        "Máximo 15 caracteres permitidos."
-                      );
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        identificacion: true,
+                      }));
                     } else {
-                      onChange(numericText);
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        identificacion: false,
+                      }));
                     }
                   }}
                   value={value}
                 />
               )}
             />
-            {errors.identificacion && (
+            {errors.identificacion && !alertStates.identificacion && (
               <Text style={styles.error}>{errors.identificacion.message}</Text>
             )}
+            {alertStates.identificacion && (
+              <Text style={styles.error}>Máximo 15 caracteres permitidos.</Text>
+            )}
           </View>
-
+          {/* tIPO DE PERSONA */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Selecciona el tipo de persona
@@ -290,6 +333,7 @@ export default function PreRegisterScreen() {
               <Text style={styles.error}>{errors.tipoPersona.message}</Text>
             )}
           </View>
+          {/* DIRECCION */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Dirección de residencia<Text style={{ color: "red" }}> *</Text>
@@ -303,24 +347,31 @@ export default function PreRegisterScreen() {
                   placeholder="Ingresa tu dirección de residencia"
                   placeholderTextColor="#A0AEC0"
                   onChangeText={(text) => {
+                    onChange(text); // Permitir que el usuario siga escribiendo
                     if (text.length > 30) {
-                      Alert.alert(
-                        "Límite de caracteres",
-                        "Máximo 30 caracteres permitidos."
-                      );
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        direccion: true,
+                      }));
                     } else {
-                      onChange(text);
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        direccion: false,
+                      }));
                     }
                   }}
                   value={value}
                 />
               )}
             />
-            {errors.direccion && (
+            {errors.direccion && !alertStates.direccion && (
               <Text style={styles.error}>{errors.direccion.message}</Text>
             )}
+            {alertStates.direccion && (
+              <Text style={styles.error}>Máximo 30 caracteres permitidos.</Text>
+            )}
           </View>
-
+          {/* TELEFONO */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Teléfono<Text style={{ color: "red" }}> *</Text>
@@ -335,147 +386,166 @@ export default function PreRegisterScreen() {
                   placeholderTextColor="#A0AEC0"
                   keyboardType="numeric"
                   onChangeText={(text) => {
-                    // Filtrar solo números y limitar a 13 caracteres
                     const numericText = text.replace(/[^0-9]/g, "");
+                    onChange(numericText);
                     if (numericText.length > 13) {
-                      Alert.alert(
-                        "Límite de caracteres",
-                        "Máximo 13 caracteres permitidos."
-                      );
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        telefono: true,
+                      }));
                     } else {
-                      onChange(numericText);
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        telefono: false,
+                      }));
                     }
                   }}
                   value={value}
                 />
               )}
             />
-            {errors.telefono && (
+            {errors.telefono && !alertStates.telefono && (
               <Text style={styles.error}>{errors.telefono.message}</Text>
             )}
+            {alertStates.telefono && (
+              <Text style={styles.error}>Máximo 13 caracteres permitidos.</Text>
+            )}
           </View>
-
+          {/* CORREO */}
           <View style={styles.inputContainer}>
-  <Text style={styles.label}>
-    Correo electrónico<Text style={{ color: "red" }}> *</Text>
-  </Text>
-  <Controller
-    control={control}
-    name="email"
-    render={({ field: { onChange, value } }) => (
-      <TextInput
-        style={styles.input}
-        placeholder="Ingresa tu correo electrónico"
-        placeholderTextColor="#A0AEC0"
-        keyboardType="email-address"
-        onChangeText={(text) => {
-          if (text.length > 50) {
-            Alert.alert("Límite de caracteres", "Máximo 50 caracteres permitidos.");
-          } else {
-            onChange(text);
-          }
-        }}
-        value={value}
-      />
-    )}
-  />
-  {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
-</View>
+            <Text style={styles.label}>
+              Correo electrónico<Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa tu correo electrónico"
+                  placeholderTextColor="#A0AEC0"
+                  keyboardType="email-address"
+                  onChangeText={(text) => {
+                    onChange(text);
+                    if (text.length > 50) {
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        email: true,
+                      }));
+                    } else {
+                      setAlertStates((prevState) => ({
+                        ...prevState,
+                        email: false,
+                      }));
+                    }
+                  }}
+                  value={value}
+                />
+              )}
+            />
+            {errors.email && !alertStates.email && (
+              <Text style={styles.error}>{errors.email.message}</Text>
+            )}
+            {alertStates.email && (
+              <Text style={styles.error}>Máximo 50 caracteres permitidos.</Text>
+            )}
+          </View>
 
         </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Contraseña<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <View style={styles.passwordInputContainer}>
-              <Controller
-                control={control}
-                name="Contraseña"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ingresa la contraseña"
-                    placeholderTextColor="#A0AEC0"
-                    secureTextEntry={!showPassword} // Mostrar/Ocultar Contraseña
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-              />
-              <TouchableOpacity
-                style={styles.toggleButton}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Text style={styles.toggleText}>
-                  {showPassword ? "Ocultar" : "Mostrar"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {errors.Contraseña && (
-              <Text style={styles.error}>{errors.Contraseña.message}</Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Confirmar contraseña<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <View style={styles.passwordInputContainer}>
-              <Controller
-                control={control}
-                name="confirmarContraseña"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirma la contraseña"
-                    placeholderTextColor="#A0AEC0"
-                    secureTextEntry={!showPasswordConfirmar} // Mostrar/Ocultar Confirmar Contraseña
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-              />
-              <TouchableOpacity
-                style={styles.toggleButton}
-                onPress={() => setShowPasswordConfirmar(!showPasswordConfirmar)}
-              >
-                <Text style={styles.toggleText}>
-                  {showPasswordConfirmar ? "Ocultar" : "Mostrar"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {errors.confirmarContraseña && (
-              <Text style={styles.error}>
-                {errors.confirmarContraseña.message}
-              </Text>
-            )}
-          </View>
-
-          <Text style={styles.subtitle}>
-            Anexe los siguientes documentos:
-            {"\n"}
-            {"\u2022"} Copia por ambas caras de la cédula.
-            {"\n"}
-            {"\u2022"} Copia del NIT (si es persona juridica).
-            {"\n"}
-            {"\u2022"} Copia del RUT.
-            {"\n"}
-            {"\u2022"} Copia del certificado de libertad y tradición.
+        {/* CONTRASEÑA */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            Contraseña<Text style={{ color: "red" }}> *</Text>
           </Text>
-
-          <TouchableOpacity
-            style={[styles.boton, { backgroundColor: buttonColor }]}
-            onPress={handleSubmit(onSubmit)}
-            disabled={isLoading}
-            onPressIn={() => setButtonColor("#42A5F5")}
-            onPressOut={() => setButtonColor("#365486")}
-          >
-            <Text style={styles.botonTexto}>
-              {isLoading ? "CARGANDO..." : "REGISTRAR"}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.passwordInputContainer}>
+            <Controller
+              control={control}
+              name="Contraseña"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ingresa la contraseña"
+                  placeholderTextColor="#A0AEC0"
+                  secureTextEntry={!showPassword} // Mostrar/Ocultar Contraseña
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Text style={styles.toggleText}>
+                {showPassword ? "Ocultar" : "Mostrar"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {errors.Contraseña && (
+            <Text style={styles.error}>{errors.Contraseña.message}</Text>
+          )}
         </View>
+        {/* CONFIRMAR CONTRASEÑA */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            Confirmar contraseña<Text style={{ color: "red" }}> *</Text>
+          </Text>
+          <View style={styles.passwordInputContainer}>
+            <Controller
+              control={control}
+              name="confirmarContraseña"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirma la contraseña"
+                  placeholderTextColor="#A0AEC0"
+                  secureTextEntry={!showPasswordConfirmar} // Mostrar/Ocultar Confirmar Contraseña
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => setShowPasswordConfirmar(!showPasswordConfirmar)}
+            >
+              <Text style={styles.toggleText}>
+                {showPasswordConfirmar ? "Ocultar" : "Mostrar"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {errors.confirmarContraseña && (
+            <Text style={styles.error}>
+              {errors.confirmarContraseña.message}
+            </Text>
+          )}
+        </View>
+
+        <Text style={styles.subtitle}>
+          Anexe los siguientes documentos:
+          {"\n"}
+          {"\u2022"} Copia por ambas caras de la cédula.
+          {"\n"}
+          {"\u2022"} Copia del NIT (si es persona juridica).
+          {"\n"}
+          {"\u2022"} Copia del RUT.
+          {"\n"}
+          {"\u2022"} Copia del certificado de libertad y tradición.
+        </Text>
+
+        <TouchableOpacity
+          style={[styles.boton, { backgroundColor: buttonColor }]}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isLoading}
+          onPressIn={() => setButtonColor("#42A5F5")}
+          onPressOut={() => setButtonColor("#365486")}
+        >
+          <Text style={styles.botonTexto}>
+            {isLoading ? "CARGANDO..." : "REGISTRAR"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
