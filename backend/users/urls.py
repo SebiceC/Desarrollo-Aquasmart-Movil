@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import CustomUserCreateView, CustomUserListView,UserRegisterAPIView, DocumentTypeView, PersonTypeView, UserInactiveAPIView,UseroProfilelView
-from .authentication import GenerateOtpView,ResetPasswordView,ValidateOtpView, LoginView, LogoutView, ValidateTokenView
+from .views import CustomUserCreateView, CustomUserListView,UserRegisterAPIView, DocumentTypeView, PersonTypeView, UserInactiveAPIView,UseroProfilelView,DocumentTypeListView,PersonTypeListView
+from .authentication import GenerateOtpPasswordRecoveryView,ResetPasswordView,ValidateOtpView, LoginView, LogoutView, ValidateTokenView
 urlpatterns = [
     path('admin/listed', CustomUserListView.as_view(), name='customuser-list'),  # Listar usuarios
     path('admin/document-type',DocumentTypeView.as_view(), name='document-type'),
@@ -10,9 +10,12 @@ urlpatterns = [
     path('profile', UseroProfilelView.as_view(), name='perfil-usuario'),
     path('pre-register', CustomUserCreateView.as_view(), name='customuser-pre-register'),  # Pre-registro de usuarios    
     path('login', LoginView.as_view(), name='login'), # Login
-    path('generate-otp', GenerateOtpView.as_view(), name='generate_otp'),
+    path('generate-otp', GenerateOtpPasswordRecoveryView.as_view(), name='generate_otp_password_recovery'),
     path('validate-otp',ValidateOtpView.as_view(), name='validate-otp'),
     path('reset-password',ResetPasswordView.as_view(), name='reset-password'),
     path('logout', LogoutView.as_view(), name='logout'),
     path('validate-token', ValidateTokenView.as_view(), name='validate-token'),
+    path('list-document-type',DocumentTypeListView.as_view(), name='listed-document-type'),
+    path('list-person-type',PersonTypeListView.as_view(),name='listed-person-type'),
+    
 ]
