@@ -102,8 +102,8 @@ export default function PreRegisterScreen() {
         console.log("Respuesta tipos de persona:", personData);
 
   
-        setDocumentTypes(docData.results || docData.data || []);
-        setPersonTypes(personData.results || personData.data || []);
+        setDocumentTypes(docData);
+        setPersonTypes(personData);
 
       } catch (error) {
         console.error("Error al cargar los tipos de datos:", error);
