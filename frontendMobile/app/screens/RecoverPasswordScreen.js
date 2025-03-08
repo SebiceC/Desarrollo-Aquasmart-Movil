@@ -138,7 +138,10 @@ export default function RecoverPasswordScreen() {
                   placeholder="Ingresa tu Cédula de Ciudadanía"
                   placeholderTextColor="#A0AEC0"
                   keyboardType="numeric"
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    const numericValue = text.replace(/[^0-9]/g, "");
+                    onChange(numericValue);
+                  }}
                   value={value}
                 />
               )}
@@ -161,7 +164,10 @@ export default function RecoverPasswordScreen() {
                   placeholder="Ingresa tu teléfono | Ej: 3012345678"
                   placeholderTextColor="#A0AEC0"
                   keyboardType="phone-pad"
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    const numericValue = text.replace(/[^0-9]/g, "");
+                    onChange(numericValue);
+                  }}
                   value={value}
                   maxLength={15}
                 />

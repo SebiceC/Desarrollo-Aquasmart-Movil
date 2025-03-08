@@ -36,8 +36,8 @@ const PreRegisterSchema = yup.object().shape({
     .required("Campo obligatorio"),
   telefono: yup
     .string()
-    .matches(/^\d{7,13}$/, "Debe tener entre 7 y 13 dígitos")
-    .required("Campo obligatorio"),
+    .required("Campo obligatorio")
+    .matches(/^\d{7,13}$/, "Debe tener entre 7 y 13 dígitos"),
   email: yup
     .string()
     .email("Correo inválido")
@@ -80,6 +80,23 @@ export default function PreRegisterScreen() {
   } = useForm({
     resolver: yupResolver(PreRegisterSchema),
   });
+
+  useEffect(() => {
+    async function fetchTypes() {
+       try {
+        const docRes = await fetch("http://127.0.0.1:8000/api/users/list-person-type");
+         const personRes = await fetch("http://127.0.0.1:8000/api/users/list-document-type");
+        const docData = await docRes.json();
+         const personData = await personRes.json();
+         setDocumentTypes(docData);
+         setPersonTypes(personData);
+       } catch (error) {
+         console.error("Error al cargar los tipos de datos:", error);
+       }
+     }
+     fetchTypes();
+   }, []);
+
   const [alertStates, setAlertStates] = useState({
     nombre: false,
     apellido: false,

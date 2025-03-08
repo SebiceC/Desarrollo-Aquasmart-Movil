@@ -141,7 +141,10 @@ export default function LoginScreen() {
                   placeholder="Ingresa tu Cedula de Ciudadanía"
                   placeholderTextColor="#A0AEC0"
                   keyboardType="numeric"
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    const numericValue = text.replace(/[^0-9]/g, "");
+                    onChange(numericValue);
+                  }}
                   value={value}
                 />
               )}
