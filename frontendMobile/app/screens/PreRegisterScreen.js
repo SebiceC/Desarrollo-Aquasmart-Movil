@@ -115,11 +115,13 @@ export default function PreRegisterScreen() {
         const docData = await docRes.json();
         const personData = await personRes.json();
   
-        console.log("Document Types:", docData);
-        console.log("Person Types:", personData);
+        console.log("Respuesta tipos de documento:", docData);
+        console.log("Respuesta tipos de persona:", personData);
+
   
         setDocumentTypes(docData);
         setPersonTypes(personData);
+
       } catch (error) {
         console.error("Error al cargar los tipos de datos:", error);
       }
