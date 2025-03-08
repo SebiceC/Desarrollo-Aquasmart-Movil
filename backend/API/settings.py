@@ -25,8 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-#&z!^@^"
-
+SECRET_KEY = "django-insecure-#&"
 #SECRET_KEY = os.environ.get('SECRET_KEY', default=os.getenv("SECRET_KEY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -180,6 +179,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8081",
     "https://desarrollo-aqua-smart-frontend-mu.vercel.app",
     "https://desarrollo-aquasmart-frontend2.vercel.app",
+    "https://desarrollo-aqua-smart-frontend-six.vercel.app",
 ]
 
 # También puedes permitir todas las solicitudes (NO recomendado en producción)

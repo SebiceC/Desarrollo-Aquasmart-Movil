@@ -89,6 +89,27 @@ export default function PreRegisterScreen() {
     email: false,
   });
 
+  useEffect(() => {
+    async function fetchTypes() {
+      try {
+        const docRes = await fetch("http://127.0.0.1:8000/api/users/list-document-type");
+        const personRes = await fetch("http://127.0.0.1:8000/api/users/list-person-type");
+  
+        const docData = await docRes.json();
+        const personData = await personRes.json();
+  
+        console.log("Document Types:", docData);
+        console.log("Person Types:", personData);
+  
+        setDocumentTypes(docData);
+        setPersonTypes(personData);
+      } catch (error) {
+        console.error("Error al cargar los tipos de datos:", error);
+      }
+    }
+    fetchTypes();
+  }, []);
+
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
@@ -240,20 +261,13 @@ export default function PreRegisterScreen() {
                 <View style={styles.pickerContainer}>
                   <Picker selectedValue={value} onValueChange={onChange}>
                     <Picker.Item label="Seleccione una opción" value="" />
-
-                    <Picker.Item label="Cédula de ciudadanía (CC)" value="CC" />
-                    <Picker.Item
-                      label="Cédula de extranjería (CE)"
-                      value="CE"
-                    />
-                    <Picker.Item
-                      label="Permiso especial de permanencia (PEP)"
-                      value="PEP"
-                    />
-                    <Picker.Item
-                      label="Documento de identificación extranjero (DIE)"
-                      value="DIE"
-                    />
+                    {documentTypes.length > 0 ? (
+                    documentTypes.map((doc) => (
+                      <Picker.Item key={doc.documentTypeId} label={doc.typeName} value={doc.documentTypeId} />
+                    ))
+                  ) : (
+                    <Picker.Item label="No hay datos" value="" />
+                  )}
                   </Picker>
                 </View>
               )}
@@ -317,14 +331,13 @@ export default function PreRegisterScreen() {
                 <View style={styles.pickerContainer}>
                   <Picker selectedValue={value} onValueChange={onChange}>
                     <Picker.Item label="Seleccione una opción" value="" />
-                    <Picker.Item
-                      label="Persona Natural"
-                      value="persona_natural"
-                    />
-                    <Picker.Item
-                      label="Persona Jurídica"
-                      value="persona_juridica"
-                    />
+                    {personTypes.length > 0 ? (
+                      personTypes.map((person) => (
+                        <Picker.Item key={person.personTypeId} label={person.typeName} value={person.personTypeId} />
+                      ))
+                    ) : (
+                      <Picker.Item label="No hay datos" value="" />
+                    )}
                   </Picker>
                 </View>
               )}
