@@ -74,8 +74,8 @@ export default function LoginScreen() {
               onPress: () => {
                 setAlertConfig((prev) => ({ ...prev, visible: false }));
                 navigation.navigate("TokenValidationScreen", {
-                  document: response.document,
-                  phone: response.phone,
+                  document: data.document,
+                  phone: data.phone,
                 });
               },
               style: { backgroundColor: "#365486" },
