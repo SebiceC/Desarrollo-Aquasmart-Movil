@@ -155,6 +155,7 @@ export default function PasswordChangeScreen() {
                     secureTextEntry={!showPasswordNueva}
                     onChangeText={onChange}
                     value={value}
+                    maxLength={20}
                   />
                 )}
               />
@@ -188,6 +189,7 @@ export default function PasswordChangeScreen() {
                     secureTextEntry={!showPasswordConfirmar}
                     onChangeText={onChange}
                     value={value}
+                    maxLength={20}
                   />
                 )}
               />
