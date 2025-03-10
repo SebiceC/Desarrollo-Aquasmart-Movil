@@ -13,6 +13,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { Image } from "react-native";
 import api from "../services/api";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { AlertCustom } from "../components/AlertCustom";
 
 const PasswordChangeSchema = yup.object().shape({
   document: yup
@@ -27,12 +28,14 @@ const PasswordChangeSchema = yup.object().shape({
     .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
     .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
-    .matches(/[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/, "Debe contener al menos un carácter especial"),
+    .matches(
+      /[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/,
+      "Debe contener al menos un carácter especial"
+    ),
   confirmPassword: yup
     .string()
     .required("Campo obligatorio")
-    .oneOf([yup.ref("new_password"), null], "Las contraseñas no coinciden")
-   ,
+    .oneOf([yup.ref("new_password"), null], "Las contraseñas no coinciden"),
 });
 
 export default function PasswordChangeScreen() {
@@ -45,17 +48,25 @@ export default function PasswordChangeScreen() {
   } = useForm({
     resolver: yupResolver(PasswordChangeSchema),
     defaultValues: {
-      document: route.params?.document || "" // 2. Obtener documento de parámetros
+      document: route.params?.document || "", // 2. Obtener documento de parámetros
     },
   });
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [buttonColor, setButtonColor] = useState("#365486"); 
-  const [showPasswordNueva, setShowPasswordNueva] = useState(false); 
+  const [buttonColor, setButtonColor] = useState("#365486");
+  const [showPasswordNueva, setShowPasswordNueva] = useState(false);
   const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false);
   const [showCustomAlert, setShowCustomAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState(""); 
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [],
+  });
 
   const onSubmit = async (data) => {
     console.log("[PasswordChange] Datos enviados:", data);
@@ -63,34 +74,51 @@ export default function PasswordChangeScreen() {
 
     try {
       const response = await api.post("/users/reset-password", {
-       document: data.document,
-        new_password: data.new_password
+        document: data.document,
+        new_password: data.new_password,
       });
-      
+
       console.log("[PasswordChange] Respuesta del backend:", response.data);
 
-      navigation.navigate("Login");
-      setAlertMessage("¡Contraseña actualizada exitosamente!");
-      setShowCustomAlert(true);
-      setTimeout(() => setShowCustomAlert(false), 3000);
-
-
+      setAlertConfig({
+        visible: true,
+        type: "info",
+        title: "CAMBIO DE CONTRASEÑA EXITOSO",
+        buttons: [
+          {
+            text: "Iniciar Sesión",
+            onPress: () => {
+              setAlertConfig((prev) => ({ ...prev, visible: false }));
+              navigation.navigate("Login");
+            },
+            style: { backgroundColor: "#365486" },
+          },
+        ],
+        animationType: "slide",
+      });
     } catch (error) {
       console.error("[PasswordChange] Error completo:", error);
+      setAlertMessage("¡La contraseña no puede ser igual a la anterior!");
+      setShowCustomAlert(true);
+      setTimeout(() => setShowCustomAlert(false), 7000);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.logoContainer}>
         <Image
-          source={require('../assets/img_M1/logo.png')}
+          source={require("../assets/img_M1/logo.png")}
           style={styles.logo}
         />
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
       </View>
+
       {showCustomAlert && (
         <View style={styles.customAlert}>
           <Icon name="warning" size={20} color="#757777" />
@@ -98,6 +126,15 @@ export default function PasswordChangeScreen() {
           <Icon name="warning" size={20} color="#757777" />
         </View>
       )}
+
+      <AlertCustom
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
+
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.titulo}>CAMBIO DE CONTRASEÑA</Text>
 
@@ -170,15 +207,15 @@ export default function PasswordChangeScreen() {
         </View>
 
         <Text style={styles.subtitle}>
-          {'\u2022'} Máximo 20 caracteres, mínimo 8 caracteres.
-          {'\n'}
-          {'\u2022'} Al menos una letra mayúscula.
-          {'\n'}
-          {'\u2022'} Al menos una letra minúscula.
-          {'\n'}
-          {'\u2022'} Al menos un número.
-          {'\n'}
-          {'\u2022'} Al menos un carácter especial (como @, #, $, etc.).
+          {"\u2022"} Máximo 20 caracteres, mínimo 8 caracteres.
+          {"\n"}
+          {"\u2022"} Al menos una letra mayúscula.
+          {"\n"}
+          {"\u2022"} Al menos una letra minúscula.
+          {"\n"}
+          {"\u2022"} Al menos un número.
+          {"\n"}
+          {"\u2022"} Al menos un carácter especial (como @, #, $, etc.).
         </Text>
 
         <TouchableOpacity

@@ -12,17 +12,18 @@ api.interceptors.request.use(async (config) => {
   const publicEndpoints = [
     "/users/login",
     "/users/validate-otp",
-    "/users/generate-otp"
+    "/users/generate-otp",
+    "/users/reset-password",
   ];
 
   // Agregar token a TODAS las rutas excepto las públicas
-  if (!publicEndpoints.some(endpoint => config.url.includes(endpoint))) {
+  if (!publicEndpoints.some((endpoint) => config.url.includes(endpoint))) {
     const token = await AsyncStorage.getItem("authToken");
     if (token) {
       config.headers.Authorization = `Token ${token}`;
     }
   }
-  
+
   return config;
 });
 

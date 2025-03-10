@@ -13,14 +13,15 @@ import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { AlertCustom } from "../components/AlertCustom";
 
 // Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
   nombre: yup
-  .string()
-  .required("Campo obligatorio")
-  .matches(/^[A-Za-zÁ-ÿ\s]+$/, "Solo se permiten letras y espacios") // Validación para solo letras y espacios
-  .max(20, "Máximo 20 caracteres"),
+    .string()
+    .required("Campo obligatorio")
+    .matches(/^[A-Za-zÁ-ÿ\s]+$/, "Solo se permiten letras y espacios") // Validación para solo letras y espacios
+    .max(20, "Máximo 20 caracteres"),
   apellido: yup
     .string()
     .required("Campo obligatorio")
@@ -89,22 +90,32 @@ export default function PreRegisterScreen() {
     email: false,
   });
 
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "success",
+    title: "",
+    message: "",
+    buttons: [],
+  });
+
   useEffect(() => {
     async function fetchTypes() {
       try {
-        const docRes = await fetch("http://127.0.0.1:8000/api/users/list-document-type");
-        const personRes = await fetch("http://127.0.0.1:8000/api/users/list-person-type");
-  
+        const docRes = await fetch(
+          "http://127.0.0.1:8000/api/users/list-document-type"
+        );
+        const personRes = await fetch(
+          "http://127.0.0.1:8000/api/users/list-person-type"
+        );
+
         const docData = await docRes.json();
         const personData = await personRes.json();
-  
+
         console.log("Respuesta tipos de documento:", docData);
         console.log("Respuesta tipos de persona:", personData);
 
-  
         setDocumentTypes(docData);
         setPersonTypes(personData);
-
       } catch (error) {
         console.error("Error al cargar los tipos de datos:", error);
       }
@@ -138,19 +149,35 @@ export default function PreRegisterScreen() {
       const result = await response.json();
       console.log("Respuesta del backend:", result);
       if (response.ok) {
-        Alert.alert(
-          "Registro exitoso",
-          "El usuario ha sido pre-registrado exitosamente.",
-          [{ text: "OK", onPress: () => navigation.navigate("Login") }]
-        );
+        setAlertConfig({
+          visible: true,
+          type: "success",
+          title: "¡Registro exitoso!",
+          message: "El usuario ha sido pre-registrado exitosamente.",
+          buttons: [
+            {
+              text: "Iniciar sesión",
+              onPress: () => navigation.navigate("Login"),
+            },
+          ],
+        });
       } else {
-        Alert.alert(
-          "Error en el registro",
-          result.message || "Hubo un problema en el pre-registro."
-        );
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          title: "Error en el registro",
+          message: result.message || "Hubo un problema en el pre-registro.",
+          buttons: [{ text: "Reintentar" }],
+        });
       }
     } catch (error) {
-      Alert.alert("Error", "No se pudo conectar con el servidor.");
+      setAlertConfig({
+        visible: true,
+        type: "error",
+        title: "Error de conexión",
+        message: "No se pudo conectar con el servidor.",
+        buttons: [{ text: "Entendido" }],
+      });
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +196,14 @@ export default function PreRegisterScreen() {
         />
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
       </View>
+      <AlertCustom
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
 
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.titulo}>PRE REGISTRO</Text>
@@ -264,12 +299,16 @@ export default function PreRegisterScreen() {
                   <Picker selectedValue={value} onValueChange={onChange}>
                     <Picker.Item label="Seleccione una opción" value="" />
                     {documentTypes.length > 0 ? (
-                    documentTypes.map((doc) => (
-                      <Picker.Item key={doc.documentTypeId} label={doc.typeName} value={doc.documentTypeId} />
-                    ))
-                  ) : (
-                    <Picker.Item label="No hay datos" value="" />
-                  )}
+                      documentTypes.map((doc) => (
+                        <Picker.Item
+                          key={doc.documentTypeId}
+                          label={doc.typeName}
+                          value={doc.documentTypeId}
+                        />
+                      ))
+                    ) : (
+                      <Picker.Item label="No hay datos" value="" />
+                    )}
                   </Picker>
                 </View>
               )}
@@ -335,7 +374,11 @@ export default function PreRegisterScreen() {
                     <Picker.Item label="Seleccione una opción" value="" />
                     {personTypes.length > 0 ? (
                       personTypes.map((person) => (
-                        <Picker.Item key={person.personTypeId} label={person.typeName} value={person.personTypeId} />
+                        <Picker.Item
+                          key={person.personTypeId}
+                          label={person.typeName}
+                          value={person.personTypeId}
+                        />
                       ))
                     ) : (
                       <Picker.Item label="No hay datos" value="" />
@@ -465,7 +508,6 @@ export default function PreRegisterScreen() {
               <Text style={styles.error}>Máximo 50 caracteres permitidos.</Text>
             )}
           </View>
-
         </View>
 
         {/* CONTRASEÑA */}
