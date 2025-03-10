@@ -237,6 +237,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -275,6 +276,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -349,6 +351,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -419,6 +422,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={35}
                 />
               )}
             />
@@ -459,6 +463,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={15}
                 />
               )}
             />
@@ -498,6 +503,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={50}
                 />
               )}
             />
@@ -527,6 +533,7 @@ export default function PreRegisterScreen() {
                   secureTextEntry={!showPassword} // Mostrar/Ocultar Contraseña
                   onChangeText={onChange}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -560,6 +567,7 @@ export default function PreRegisterScreen() {
                   secureTextEntry={!showPasswordConfirmar} // Mostrar/Ocultar Confirmar Contraseña
                   onChangeText={onChange}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
