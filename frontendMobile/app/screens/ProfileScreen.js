@@ -10,7 +10,6 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import NavbarLayout from "../components/NavbarLayout";
 import api from "../services/api";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import { Image } from "react-native";
 
 export default function ProfileScreen({ navigation }) {
@@ -24,7 +23,6 @@ export default function ProfileScreen({ navigation }) {
         const response = await api.get("/users/profile");
         console.log("[Profile] Datos recibidos:", response.data);
 
-        // Mapear datos del backend al formato necesario
         const mappedData = {
           document: response.data.document,
           firstName: response.data.first_name,
@@ -60,7 +58,7 @@ export default function ProfileScreen({ navigation }) {
     return (
       <NavbarLayout navigation={navigation}>
         <View style={styles.errorContainer}>
-          <Icon name="error-outline" size={40} color="#FF3B30" />
+          <MaterialIcons name="error-outline" size={40} color="#FF3B30" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       </NavbarLayout>
@@ -70,35 +68,31 @@ export default function ProfileScreen({ navigation }) {
   return (
     <NavbarLayout navigation={navigation}>
       <SafeAreaView style={styles.container}>
-        <View style={styles.profileHeader}>
-          <Text style={styles.headerTitle}>Mi perfil</Text>
-        </View>
-
+        <Text style={styles.headerTitle}>Mi perfil</Text>
+        <View style={styles.separator} />
         <View style={styles.profileContainer}>
           <Image
             source={require("../assets/img_M1/icon-profile.png")}
             style={styles.profileImage}
           />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>
-              {userData.firstName} {userData.lastName}
-            </Text>
-            <Text style={styles.userId}>ID: {userData.document}</Text>
+          <Text style={styles.userName}>
+            {userData.firstName} {userData.lastName}
+          </Text>
+          <Text style={styles.userId}>ID: {userData.document}</Text>
 
-            <View style={styles.infoRow}>
-              <MaterialIcons name="person-outline" size={20} color="#2D5B7B" />
-              <Text style={styles.infoText}>Persona Natural</Text>
-            </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="person-outline" size={20} color="#000" />
+            <Text style={styles.infoText}>{userData.personType}</Text>
+          </View>
 
-            <View style={styles.infoRow}>
-              <MaterialIcons name="phone-iphone" size={20} color="#2D5B7B" />
-              <Text style={styles.infoText}>{userData.phone}</Text>
-            </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="phone-iphone" size={20} color="#000" />
+            <Text style={styles.infoText}>{userData.phone}</Text>
+          </View>
 
-            <View style={styles.infoRow}>
-              <MaterialIcons name="email" size={20} color="#2D5B7B" />
-              <Text style={styles.infoText}>{userData.email}</Text>
-            </View>
+          <View style={styles.infoRow}>
+            <MaterialIcons name="email" size={20} color="#000" />
+            <Text style={styles.infoText}>{userData.email}</Text>
           </View>
 
           <TouchableOpacity
@@ -106,7 +100,6 @@ export default function ProfileScreen({ navigation }) {
             onPress={() => navigation.navigate("EditarPerfil")}
           >
             <Text style={styles.editText}>Editar</Text>
-            <MaterialIcons name="edit" size={22} color="#2D5B7B" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -118,84 +111,73 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
-  },
-  profileHeader: {
-    paddingVertical: 150,
     alignItems: "center",
-    zIndex: 2,
-    elevation: 2,
+    paddingTop: 20,
   },
   headerTitle: {
-    color: "#000000",
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: "bold",
-    position: "absolute",
-    zIndex: 3,
-    top: 50,
+    color: "#000",
+    marginBottom: 8,
+  },
+  separator: {
+    width: "80%",
+    height: 1,
+    backgroundColor: "#CCC",
+    marginBottom: 20,
   },
   profileContainer: {
-    margin: 20,
     backgroundColor: "white",
     borderRadius: 12,
     padding: 24,
-    elevation: 5,
-    marginTop: -100,
-    zIndex: 1,
+    width: "90%",
     alignItems: "center",
+    elevation: 5,
   },
   profileImage: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    alignSelf: "center",
-    marginTop: -100,
-    borderWidth: 4,
-    borderColor: "white",
-    backgroundColor: "white",
-    zIndex: 1,
-  },
-  userInfo: {
-    width: "100%",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-    paddingBottom: 16,
+    width: 180,
+    height: 180,
+    borderRadius: 60,
+    marginBottom: 16,
   },
   userName: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#000000",
-    marginTop: 15,
-    marginBottom: 6,
+    color: "#000",
   },
   userId: {
-    fontSize: 16,
+    fontSize: 23,
     color: "#666",
-    marginBottom: 25,
+    marginBottom: 16,
+    marginVertical: 5,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 18,
+    marginBottom: 25,  // Antes era 18, ahora es 25 para mayor separación
     width: "100%",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    paddingLeft: 60,
   },
   infoText: {
-    fontSize: 16,
+  fontSize: 18,  
     color: "#000000",
     marginLeft: 10,
+    textAlign: "left",
+    flex: 1, 
+    marginTop: 5,
   },
   editButton: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    marginTop: 16,
+    backgroundColor: "#003F88",
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    marginTop: 30,
   },
   editText: {
-    color: "#000000",
+    color: "#FFF",
     fontSize: 16,
-    marginRight: 8,
-    fontWeight: "500",
+    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,

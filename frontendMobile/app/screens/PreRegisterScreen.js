@@ -13,14 +13,15 @@ import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import * as DocumentPicker from "expo-document-picker";
 
 // Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
   nombre: yup
-  .string()
-  .required("Campo obligatorio")
-  .matches(/^[A-Za-zÁ-ÿ\s]+$/, "Solo se permiten letras y espacios") // Validación para solo letras y espacios
-  .max(20, "Máximo 20 caracteres"),
+    .string()
+    .required("Campo obligatorio")
+    .matches(/^[A-Za-zÁ-ÿ\s]+$/, "Solo se permiten letras y espacios") // Validación para solo letras y espacios
+    .max(20, "Máximo 20 caracteres"),
   apellido: yup
     .string()
     .required("Campo obligatorio")
@@ -81,21 +82,31 @@ export default function PreRegisterScreen() {
     resolver: yupResolver(PreRegisterSchema),
   });
 
-  useEffect(() => {
-    async function fetchTypes() {
-       try {
-        const docRes = await fetch("http://127.0.0.1:8000/api/users/list-person-type");
-         const personRes = await fetch("http://127.0.0.1:8000/api/users/list-document-type");
-        const docData = await docRes.json();
-         const personData = await personRes.json();
-         setDocumentTypes(docData);
-         setPersonTypes(personData);
-       } catch (error) {
-         console.error("Error al cargar los tipos de datos:", error);
-       }
-     }
-     fetchTypes();
-   }, []);
+  const [selectedFiles, setSelectedFiles] = useState([]); // Almacenar múltiples archivos
+
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+        multiple: true,
+      });
+
+      if (!result.canceled) {
+        if (selectedFiles.length + result.assets.length > 6) {
+          alert("Solo puedes seleccionar hasta 6 archivos PDF.");
+          return;
+        }
+
+        setSelectedFiles((prevFiles) => [...prevFiles, ...result.assets]);
+      }
+    } catch (error) {
+      console.error("Error seleccionando archivos:", error);
+    }
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
 
   const [alertStates, setAlertStates] = useState({
     nombre: false,
@@ -105,23 +116,27 @@ export default function PreRegisterScreen() {
     direccion: false,
     email: false,
   });
+  const [buttonColor1, setButtonColor1] = useState("#365486");
+  const [buttonColor2, setButtonColor2] = useState("#365486");
 
   useEffect(() => {
     async function fetchTypes() {
       try {
-        const docRes = await fetch("http://127.0.0.1:8000/api/users/list-document-type");
-        const personRes = await fetch("http://127.0.0.1:8000/api/users/list-person-type");
-  
+        const docRes = await fetch(
+          "http://127.0.0.1:8000/api/users/list-document-type"
+        );
+        const personRes = await fetch(
+          "http://127.0.0.1:8000/api/users/list-person-type"
+        );
+
         const docData = await docRes.json();
         const personData = await personRes.json();
-  
+
         console.log("Respuesta tipos de documento:", docData);
         console.log("Respuesta tipos de persona:", personData);
 
-  
         setDocumentTypes(docData);
         setPersonTypes(personData);
-
       } catch (error) {
         console.error("Error al cargar los tipos de datos:", error);
       }
@@ -281,12 +296,16 @@ export default function PreRegisterScreen() {
                   <Picker selectedValue={value} onValueChange={onChange}>
                     <Picker.Item label="Seleccione una opción" value="" />
                     {documentTypes.length > 0 ? (
-                    documentTypes.map((doc) => (
-                      <Picker.Item key={doc.documentTypeId} label={doc.typeName} value={doc.documentTypeId} />
-                    ))
-                  ) : (
-                    <Picker.Item label="No hay datos" value="" />
-                  )}
+                      documentTypes.map((doc) => (
+                        <Picker.Item
+                          key={doc.documentTypeId}
+                          label={doc.typeName}
+                          value={doc.documentTypeId}
+                        />
+                      ))
+                    ) : (
+                      <Picker.Item label="No hay datos" value="" />
+                    )}
                   </Picker>
                 </View>
               )}
@@ -352,7 +371,11 @@ export default function PreRegisterScreen() {
                     <Picker.Item label="Seleccione una opción" value="" />
                     {personTypes.length > 0 ? (
                       personTypes.map((person) => (
-                        <Picker.Item key={person.personTypeId} label={person.typeName} value={person.personTypeId} />
+                        <Picker.Item
+                          key={person.personTypeId}
+                          label={person.typeName}
+                          value={person.personTypeId}
+                        />
                       ))
                     ) : (
                       <Picker.Item label="No hay datos" value="" />
@@ -482,7 +505,6 @@ export default function PreRegisterScreen() {
               <Text style={styles.error}>Máximo 50 caracteres permitidos.</Text>
             )}
           </View>
-
         </View>
 
         {/* CONTRASEÑA */}
@@ -555,7 +577,7 @@ export default function PreRegisterScreen() {
         </View>
 
         <Text style={styles.subtitle}>
-          Anexe los siguientes documentos:
+          Anexe los siguientes documentos en formato PDF:
           {"\n"}
           {"\u2022"} Copia por ambas caras de la cédula.
           {"\n"}
@@ -565,18 +587,42 @@ export default function PreRegisterScreen() {
           {"\n"}
           {"\u2022"} Copia del certificado de libertad y tradición.
         </Text>
+        <View>
+          {selectedFiles.length > 0 && (
+            <View style={styles.fileList}>
+              {selectedFiles.map((file, index) => (
+                <View key={index} style={styles.fileItem}>
+                  <Text style={styles.fileName}>{file.name}</Text>
+                  <TouchableOpacity onPress={() => removeFile(index)}>
+                    <Text style={styles.removeButton}>X</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+          <View style={styles.botonContainer}>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: buttonColor1 }]}
+              onPress={pickDocument}
+              onPressIn={() => setButtonColor1("#42A5F5")}
+              onPressOut={() => setButtonColor1("#365486")}
+            >
+              <Text style={styles.botonTexto}>Seleccionar archivos</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.boton, { backgroundColor: buttonColor }]}
-          onPress={handleSubmit(onSubmit)}
-          disabled={isLoading}
-          onPressIn={() => setButtonColor("#42A5F5")}
-          onPressOut={() => setButtonColor("#365486")}
-        >
-          <Text style={styles.botonTexto}>
-            {isLoading ? "CARGANDO..." : "REGISTRAR"}
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: buttonColor2 }]}
+              onPress={handleSubmit(onSubmit)}
+              disabled={isLoading}
+              onPressIn={() => setButtonColor2("#42A5F5")}
+              onPressOut={() => setButtonColor2("#365486")}
+            >
+              <Text style={styles.botonTexto}>
+                {isLoading ? "CARGANDO..." : "REGISTRAR"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -644,16 +690,6 @@ const styles = {
     fontSize: 12,
     marginTop: 4,
   },
-  boton: {
-    height: 48,
-    width: "60%",
-    backgroundColor: "#365486",
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-    alignSelf: "center",
-  },
   botonTexto: {
     color: "#FFFFFF",
     fontSize: 15,
@@ -689,5 +725,42 @@ const styles = {
     color: "#4299E1",
     fontWeight: "600",
     fontSize: 14,
+  },
+  button: {
+    backgroundColor: "#365486",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  fileList: {
+    marginTop: 10,
+  },
+  fileItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 5,
+  },
+  fileName: {
+    flex: 1,
+    fontSize: 14,
+  },
+  removeButton: {
+    color: "red",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 10,
+  },
+  botonContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+    gap: 10, // Espacio entre los botones
   },
 };
