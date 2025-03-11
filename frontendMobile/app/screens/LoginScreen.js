@@ -14,15 +14,17 @@ import { login } from "../services/authService";
 import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { AlertCustom } from "../components/AlertCustom";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const loginSchema = yup.object().shape({
   document: yup
     .string()
-    .matches(/^\d{6,12}$/, "Cédula inválida")
-    .required("Campo obligatorio"),
-  password: yup.string().required("Campo obligatorio"),
+    .required("Campo obligatorio")
+    .matches(/^\d{6,12}$/, "Cédula inválida"),
+  password: yup
+    .string()
+    .required("Campo obligatorio")
+    .max(20, "Máximo 20 caracteres"),
 });
 
 export default function LoginScreen() {
@@ -40,46 +42,102 @@ export default function LoginScreen() {
 
   const [showCustomAlert, setShowCustomAlert] = useState(false); // Estado para mostrar la alerta personalizada
   const [alertMessage, setAlertMessage] = useState(""); // Estado para el mensaje de la alerta
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertCustomMessage, setAlertCustomMessage] = useState("");
 
-  const showAlert = (message) => {
-    setAlertCustomMessage(message);
-    setAlertVisible(true);
-  };
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [],
+  });
 
   const onSubmit = async (data) => {
     console.log("[Login] Datos enviados:", data);
     setIsLoading(true);
 
     try {
-
-      await AsyncStorage.removeItem('authToken');
+      await AsyncStorage.removeItem("authToken");
 
       const response = await login(data);
       console.log("[Login] Respuesta del backend:", response);
 
       if (response.document) {
-        navigation.navigate("TokenValidationScreen", {
-          document: response.document,
-          phone: response.phone,
+        setAlertConfig({
+          visible: true,
+          type: "info",
+          title: "TOKEN ENVIADO",
+          message:
+            "Se ha enviado un token de 6 caracteres\na tu número de teléfono registrado.",
+          buttons: [
+            {
+              text: "CONFIRMAR",
+              onPress: () => {
+                setAlertConfig((prev) => ({ ...prev, visible: false }));
+                navigation.navigate("TokenValidationScreen", {
+                  document: data.document,
+                  phone: data.phone,
+                });
+              },
+              style: { backgroundColor: "#365486" },
+            },
+          ],
+          animationType: "slide",
         });
       }
     } catch (error) {
-      let message = "";
       console.error("[Login] Error capturado:", error.message);
       setAlertMessage(
-        error.response?.data?.message || "Credenciales incorrectas",
+        error.response?.data?.message || "Credenciales incorrectas"
       );
       setShowCustomAlert(true); // Mostrar alerta
       setTimeout(() => setShowCustomAlert(false), 8000);
-      if (error.message.startsWith("Último intento")) {
-        message =
-          "¡Último intento! Si falla nuevamente, su cuenta será bloqueada por 1 hora.";
-        showAlert(message);
+
+      if (
+        error.response?.status === 403 &&
+        error.response.data?.error?.detail
+      ) {
+        alertMessage = error.response.data.error.detail;
+
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          message: "Error en el inicio de sesión, ya existe una sesión activa.",
+          buttons: [
+            {
+              text: "VOLVER",
+              onPress: () =>
+                setAlertConfig((prev) => ({ ...prev, visible: false })),
+            },
+          ],
+        });
+      } else if (error.message.startsWith("Último intento")) {
+        setAlertConfig({
+          visible: true,
+          type: "warning",
+          title: "¡ADVERTENCIA!",
+          message: "Último intento antes de bloqueo por 1 hora",
+          buttons: [
+            {
+              text: "ENTENDIDO",
+              onPress: () =>
+                setAlertConfig((prev) => ({ ...prev, visible: false })),
+            },
+          ],
+        });
       } else if (error.message.startsWith("Usuario bloqueado")) {
-        message = "Usuario bloqueado por 1 hora";
-        showAlert(message);
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          title: "CUENTA BLOQUEADA",
+          message: "Usuario bloqueado por 1 hora",
+          buttons: [
+            {
+              text: "ENTENDIDO",
+              onPress: () =>
+                setAlertConfig((prev) => ({ ...prev, visible: false })),
+            },
+          ],
+        });
       }
     } finally {
       setIsLoading(false);
@@ -121,10 +179,15 @@ export default function LoginScreen() {
           </View>
         )}
 
-<AlertCustom
-          visible={alertVisible}
-          message={alertCustomMessage}
-          onClose={() => setAlertVisible(false)}
+        <AlertCustom
+          visible={alertConfig.visible}
+          type={alertConfig.type}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          buttons={alertConfig.buttons}
+          onClose={() =>
+            setAlertConfig((prev) => ({ ...prev, visible: false }))
+          }
         />
 
         <View style={styles.formulario}>
@@ -141,11 +204,9 @@ export default function LoginScreen() {
                   placeholder="Ingresa tu Cedula de Ciudadanía"
                   placeholderTextColor="#A0AEC0"
                   keyboardType="numeric"
-                  onChangeText={(text) => {
-                    const numericValue = text.replace(/[^0-9]/g, "");
-                    onChange(numericValue);
-                  }}
+                  onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -170,6 +231,7 @@ export default function LoginScreen() {
                     secureTextEntry={!showPassword}
                     onChangeText={onChange}
                     value={value}
+                    maxLength={20}
                   />
                 )}
               />
@@ -195,9 +257,7 @@ export default function LoginScreen() {
             <Text style={styles.enlace}>OLVIDE MI CONTRASEÑA</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            onPress={() => navigation.navigate("PreRegister")}
-          >
+          <TouchableOpacity onPress={() => navigation.navigate("PreRegister")}>
             <Text style={styles.enlace}>SOY USUARIO NUEVO</Text>
           </TouchableOpacity>
         </View>

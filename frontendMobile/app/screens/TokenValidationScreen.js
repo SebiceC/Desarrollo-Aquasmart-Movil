@@ -12,6 +12,7 @@ import api from "../services/api";
 import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AlertCustom } from "../components/AlertCustom";
 
 export default function TokenValidationScreen() {
   const navigation = useNavigation();
@@ -19,12 +20,21 @@ export default function TokenValidationScreen() {
   const { document, phone } = route.params;
 
   const [token, setToken] = useState(["", "", "", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(900);
+  const [timeLeft, setTimeLeft] = useState(300);
   const [isResending, setIsResending] = useState(false);
   const [showCustomAlert, setShowCustomAlert] = useState(false); // Estado para mostrar la alerta personalizada
   const [alertMessage, setAlertMessage] = useState(""); // Estado para el mensaje de la alerta
 
   const inputRefs = useRef([]);
+
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "success",
+    title: "",
+    icon: "",
+    message: "",
+    buttons: [],
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -60,12 +70,26 @@ export default function TokenValidationScreen() {
           // Navegar a cambio de contraseña
           navigation.replace("PasswordChange", {
             document: document,
-            token: tokenString,
           });
         } else {
+          setAlertConfig({
+            visible: true,
+            type: "info",
+            title: "¡BIENVENIDO!",
+            icon: require("../assets/img_M1/success-icon.png"),
+            buttons: [
+              {
+                text: "CONTINUAR",
+                onPress: () => {
+                  setAlertConfig((prev) => ({ ...prev, visible: false }));
+                  navigation.replace("Home");
+                },
+                style: { backgroundColor: "#365486" },
+              },
+            ],
+          });
           await AsyncStorage.setItem("authToken", response.data.token);
           console.log("Redirigiendo a HomeScreen...");
-          navigation.replace("Home");
         }
       }
     } catch (error) {
@@ -86,7 +110,7 @@ export default function TokenValidationScreen() {
       });
       console.log("[Token] Token reenviado");
 
-      setTimeLeft(900);
+      setTimeLeft(300);
       setToken(["", "", "", "", "", ""]); // Limpia los campos de token
       if (inputRefs.current[0]) {
         inputRefs.current[0].focus(); // Enfoca el primer campo de entrada
@@ -94,11 +118,19 @@ export default function TokenValidationScreen() {
       Alert.alert("Éxito", "Nuevo código enviado");
     } catch (error) {
       console.error("[Token] Error:", error);
-      setAlertMessage(
-        error.response?.data?.message || "Error al reenviar el token"
-      );
-      setShowCustomAlert(true);
-      setTimeout(() => setShowCustomAlert(false), 5000);
+      setAlertConfig({
+        visible: true,
+        type: "error",
+        title: "ERROR AL GENERAR TOKEN",
+        buttons: [
+          {
+            text: "VOLVER",
+            onPress: () =>
+              setAlertConfig((prev) => ({ ...prev, visible: false })),
+            style: { backgroundColor: "#E53E3E" },
+          },
+        ],
+      });
     } finally {
       setIsResending(false);
     }
@@ -124,12 +156,22 @@ export default function TokenValidationScreen() {
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
       </View>
 
+      <AlertCustom
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        icon={alertConfig.icon}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
+
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.title}>INGRESO DE TOKEN</Text>
 
         <Text style={styles.subtitle}>
           Introduce el token enviado por SMS a tu teléfono. Recuerda que expira
-          en 15 minutos.
+          en 5 minutos.
         </Text>
 
         {/* Alerta personalizada debajo del título */}

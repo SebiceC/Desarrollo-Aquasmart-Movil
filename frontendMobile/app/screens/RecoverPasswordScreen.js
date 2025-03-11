@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import api from "../services/api";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { AlertCustom } from "../components/AlertCustom";
 
 const RecoverPasswordSchema = yup.object().shape({
   document: yup
@@ -47,7 +48,14 @@ export default function RecoverPasswordScreen() {
   const [showCustomAlert, setShowCustomAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
-  
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [],
+  });
+
   const onSubmit = async (data) => {
     console.log("[RecoverPassword] Iniciando envío...", data);
     setIsLoading(true);
@@ -60,10 +68,27 @@ export default function RecoverPasswordScreen() {
 
       console.log("[RecoverPassword] Respuesta exitosa:", response.data);
 
-      navigation.navigate("TokenValidationScreen", {
-        document: data.document,
-        phone: data.phone,
-        isPasswordRecovery: true,
+      setAlertConfig({
+        visible: true,
+        type: "info",
+        title: "TOKEN ENVIADO",
+        message:
+          "Se ha enviado un token de 6 caracteres\na tu número de teléfono registrado.",
+        buttons: [
+          {
+            text: "CONFIRMAR",
+            onPress: () => {
+              setAlertConfig((prev) => ({ ...prev, visible: false }));
+              navigation.navigate("TokenValidationScreen", {
+                document: data.document,
+                phone: data.phone,
+                isPasswordRecovery: true,
+              });
+            },
+            style: { backgroundColor: "#365486" },
+          },
+        ],
+        animationType: "slide",
       });
     } catch (error) {
       console.error("[RecoverPassword] Error completo:", {
@@ -71,11 +96,13 @@ export default function RecoverPasswordScreen() {
         data: error.response?.data,
         message: error.message,
       });
+      let errorMessage = "Error al procesar la solicitud";
 
-      const errorMessage =
-        error.response?.data?.error?.detail ||
-        error.response?.data?.detail ||
-        "Error al procesar la solicitud";
+      if (error.response?.status === 404) {
+        errorMessage = "Usuario no registrado en el sistema";
+      } else if (error.response?.status === 400) {
+        errorMessage = "El número de teléfono no coincide con el registrado.";
+      }
 
       setAlertMessage(errorMessage);
       setShowCustomAlert(true);
@@ -117,6 +144,15 @@ export default function RecoverPasswordScreen() {
         </View>
       )}
 
+      <AlertCustom
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
+
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.titulo}>RECUPERACIÓN DE CONTRASEÑA</Text>
         <Text style={styles.subtitle}>
@@ -138,10 +174,7 @@ export default function RecoverPasswordScreen() {
                   placeholder="Ingresa tu Cédula de Ciudadanía"
                   placeholderTextColor="#A0AEC0"
                   keyboardType="numeric"
-                  onChangeText={(text) => {
-                    const numericValue = text.replace(/[^0-9]/g, "");
-                    onChange(numericValue);
-                  }}
+                  onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
                   value={value}
                 />
               )}
@@ -164,10 +197,7 @@ export default function RecoverPasswordScreen() {
                   placeholder="Ingresa tu teléfono | Ej: 3012345678"
                   placeholderTextColor="#A0AEC0"
                   keyboardType="phone-pad"
-                  onChangeText={(text) => {
-                    const numericValue = text.replace(/[^0-9]/g, "");
-                    onChange(numericValue);
-                  }}
+                  onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
                   value={value}
                   maxLength={15}
                 />
@@ -245,6 +275,11 @@ const styles = {
     backgroundColor: "#FFFFFF",
     fontSize: 16,
     color: "#2D3748",
+  },
+  error: {
+    color: "#E53E3E",
+    fontSize: 12,
+    marginTop: 4,
   },
   boton: {
     height: 48,

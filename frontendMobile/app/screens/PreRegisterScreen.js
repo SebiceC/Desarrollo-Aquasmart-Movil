@@ -13,7 +13,7 @@ import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import * as DocumentPicker from "expo-document-picker";
+import { AlertCustom } from "../components/AlertCustom";
 
 // Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
@@ -116,8 +116,14 @@ export default function PreRegisterScreen() {
     direccion: false,
     email: false,
   });
-  const [buttonColor1, setButtonColor1] = useState("#365486");
-  const [buttonColor2, setButtonColor2] = useState("#365486");
+
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "success",
+    title: "",
+    message: "",
+    buttons: [],
+  });
 
   useEffect(() => {
     async function fetchTypes() {
@@ -170,19 +176,35 @@ export default function PreRegisterScreen() {
       const result = await response.json();
       console.log("Respuesta del backend:", result);
       if (response.ok) {
-        Alert.alert(
-          "Registro exitoso",
-          "El usuario ha sido pre-registrado exitosamente.",
-          [{ text: "OK", onPress: () => navigation.navigate("Login") }]
-        );
+        setAlertConfig({
+          visible: true,
+          type: "success",
+          title: "¡Registro exitoso!",
+          message: "El usuario ha sido pre-registrado exitosamente.",
+          buttons: [
+            {
+              text: "Iniciar sesión",
+              onPress: () => navigation.navigate("Login"),
+            },
+          ],
+        });
       } else {
-        Alert.alert(
-          "Error en el registro",
-          result.message || "Hubo un problema en el pre-registro."
-        );
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          title: "Error en el registro",
+          message: result.message || "Hubo un problema en el pre-registro.",
+          buttons: [{ text: "Reintentar" }],
+        });
       }
     } catch (error) {
-      Alert.alert("Error", "No se pudo conectar con el servidor.");
+      setAlertConfig({
+        visible: true,
+        type: "error",
+        title: "Error de conexión",
+        message: "No se pudo conectar con el servidor.",
+        buttons: [{ text: "Entendido" }],
+      });
     } finally {
       setIsLoading(false);
     }
@@ -201,6 +223,14 @@ export default function PreRegisterScreen() {
         />
         <Text style={styles.aquaSmartText}>AquaSmart</Text>
       </View>
+      <AlertCustom
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
 
       <View style={styles.contenedorPrincipal}>
         <Text style={styles.titulo}>PRE REGISTRO</Text>
@@ -234,6 +264,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -272,6 +303,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -346,6 +378,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -416,6 +449,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={35}
                 />
               )}
             />
@@ -456,6 +490,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={15}
                 />
               )}
             />
@@ -495,6 +530,7 @@ export default function PreRegisterScreen() {
                     }
                   }}
                   value={value}
+                  maxLength={50}
                 />
               )}
             />
@@ -524,6 +560,7 @@ export default function PreRegisterScreen() {
                   secureTextEntry={!showPassword} // Mostrar/Ocultar Contraseña
                   onChangeText={onChange}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
@@ -557,6 +594,7 @@ export default function PreRegisterScreen() {
                   secureTextEntry={!showPasswordConfirmar} // Mostrar/Ocultar Confirmar Contraseña
                   onChangeText={onChange}
                   value={value}
+                  maxLength={20}
                 />
               )}
             />
