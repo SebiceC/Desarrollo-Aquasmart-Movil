@@ -1,7 +1,7 @@
-from rest_framework import generics,status
+from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from .models import CustomUser, DocumentType, PersonType  
-from .serializers import CustomUserSerializer, DocumentTypeSerializer, PersonTypeSerializer ,UserProfileSerializer
+from .serializers import CustomUserSerializer, DocumentTypeSerializer, PersonTypeSerializer ,UserProfileSerializer, ChangePasswordSerializer
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny  
 from drf_spectacular.utils import extend_schema, extend_schema_view,OpenApiParameter
 from rest_framework.response import Response
@@ -228,11 +228,77 @@ class UserActivateAPIView(APIView):
         user.save()
         return Response({'status': 'User activated'}, status=status.HTTP_200_OK)    
 
+# RF: Actualización de información de usuarios del distrito
+@extend_schema_view(
+    get=extend_schema(
+        summary="Obtener detalles de usuario",
+        description="Obtiene información detallada de un usuario específico por documento. Solo para administradores.",
+        responses={200: CustomUserSerializer}
+    ),
+    patch=extend_schema(
+        summary="Actualizar usuario",
+        description="Actualiza información parcial de un usuario. Solo para superusuarios o administradores.",
+        request=CustomUserSerializer,
+        responses={200: CustomUserSerializer}
+    )
+)
+class AdminUserUpdateAPIView(generics.RetrieveUpdateAPIView):
+    """
+    API para gestión de actualizaciones de usuarios por administradores
+    
+    Permite:
+    - Ver detalles completos de un usuario (GET)
+    - Actualización parcial de campos (PATCH)
+    """
+    
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    lookup_field = 'document'
+    lookup_url_kwarg = 'document'
+    
+    def get_permissions(self):
+        """Define permisos combinados para la vista"""
+        return [IsAuthenticated(), self.IsAdminOrSuperUser()]
+    
+    class IsAdminOrSuperUser(permissions.BasePermission):
+        """Permiso personalizado que verifica is_staff o is_superuser"""
+        
+        def has_permission(self, request, view):
+            return request.user.is_staff or request.user.is_superuser
+        
+        def has_object_permission(self, request, view, obj):
+            return self.has_permission(request, view)
+    
+    def get_queryset(self):
+        """Optimiza consultas relacionadas"""
+        return super().get_queryset().select_related('person_type', 'document_type')
+    
+    def perform_update(self, serializer):
+        """Manejo especial para actualización de contraseña"""
+        password = serializer.validated_data.pop('password', None)
+        instance = serializer.save()
+        
+        if password:
+            instance.set_password(password)
+            instance.save(update_fields=['password'])
+    
+    def patch(self, request, *args, **kwargs):
+        """Maneja actualizaciones parciales con formato de respuesta consistente"""
+        response = super().patch(request, *args, **kwargs)
+        
+        if response.status_code == status.HTTP_200_OK:
+            return Response({
+                'status': 'success',
+                'message': 'Usuario actualizado exitosamente',
+                'data': response.data
+            }, status=status.HTTP_200_OK)
+        
+        return response
+
 class UseroProfilelView(generics.RetrieveAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         print(self.request.user)
-        return self.request.user    
-    
+        return self.request.user

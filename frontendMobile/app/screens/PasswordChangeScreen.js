@@ -1,36 +1,28 @@
 import React, { useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-  TextInput,
-} from "react-native";
-import { useForm, Controller } from "react-hook-form";
+import { ScrollView, Text, View } from "react-native";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { Image } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import api from "../services/api";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { AlertCustom } from "../components/AlertCustom";
+import { CustomInput } from "../components/CustomInput";
+import { CustomButton } from "../components/CustomButtom";
+import { LogoHeader } from "../components/LogoHeader";
 
 const PasswordChangeSchema = yup.object().shape({
-  document: yup
-    .string()
-    .required("Campo obligatorio")
-    .matches(/^\d{6,12}$/, "Cédula inválida"),
   new_password: yup
     .string()
     .required("Campo obligatorio")
     .min(8, "Mínimo 8 caracteres")
     .max(20, "Máximo 20 caracteres")
-    .matches(/[A-Z]/, "Debe contener al menos una letra mayúscula")
-    .matches(/[a-z]/, "Debe contener al menos una letra minúscula")
+    .matches(/[A-Z]/, "Debe contener al menos una mayúscula")
+    .matches(/[a-z]/, "Debe contener al menos una minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
     .matches(
-      /[! @ # $ % ^ & * ( ) _ + - = { } | \ : ; " ' < > , . ? /]/,
-      "Debe contener al menos un carácter especial"
+      /[!@#$%^&*()_+\-=\{}|\:;"'<>,.?/]/,
+      "Debe contener un carácter especial"
     ),
   confirmPassword: yup
     .string()
@@ -39,8 +31,8 @@ const PasswordChangeSchema = yup.object().shape({
 });
 
 export default function PasswordChangeScreen() {
-  const navigation = useNavigation();
   const route = useRoute();
+  const navigation = useNavigation();
   const {
     control,
     handleSubmit,
@@ -48,18 +40,18 @@ export default function PasswordChangeScreen() {
   } = useForm({
     resolver: yupResolver(PasswordChangeSchema),
     defaultValues: {
-      document: route.params?.document || "", // 2. Obtener documento de parámetros
+      document: route.params?.document || "",
+      new_password: "",
     },
   });
 
   const [isLoading, setIsLoading] = useState(false);
-
-  const [buttonColor, setButtonColor] = useState("#365486");
-  const [showPasswordNueva, setShowPasswordNueva] = useState(false);
-  const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false);
+  const [showPassword, setShowPassword] = useState({
+    new: false,
+    confirm: false,
+  });
   const [showCustomAlert, setShowCustomAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     type: "info",
@@ -69,16 +61,12 @@ export default function PasswordChangeScreen() {
   });
 
   const onSubmit = async (data) => {
-    console.log("[PasswordChange] Datos enviados:", data);
     setIsLoading(true);
-
     try {
       const response = await api.post("/users/reset-password", {
         document: data.document,
         new_password: data.new_password,
       });
-
-      console.log("[PasswordChange] Respuesta del backend:", response.data);
 
       setAlertConfig({
         visible: true,
@@ -111,13 +99,7 @@ export default function PasswordChangeScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../assets/img_M1/logo.png")}
-          style={styles.logo}
-        />
-        <Text style={styles.aquaSmartText}>AquaSmart</Text>
-      </View>
+      <LogoHeader />
 
       {showCustomAlert && (
         <View style={styles.customAlert}>
@@ -139,73 +121,33 @@ export default function PasswordChangeScreen() {
         <Text style={styles.titulo}>CAMBIO DE CONTRASEÑA</Text>
 
         <View style={styles.formulario}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Nueva contraseña<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <View style={styles.passwordInputContainer}>
-              <Controller
-                control={control}
-                name="new_password"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ingresa la nueva contraseña"
-                    placeholderTextColor="#A0AEC0"
-                    secureTextEntry={!showPasswordNueva}
-                    onChangeText={onChange}
-                    value={value}
-                    maxLength={20}
-                  />
-                )}
-              />
-              <TouchableOpacity
-                style={styles.toggleButton}
-                onPress={() => setShowPasswordNueva(!showPasswordNueva)}
-              >
-                <Text style={styles.toggleText}>
-                  {showPasswordNueva ? "Ocultar" : "Mostrar"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {errors.new_password && (
-              <Text style={styles.error}>{errors.new_password.message}</Text>
-            )}
-          </View>
+          <CustomInput
+            control={control}
+            name="new_password"
+            label="Nueva contraseña"
+            placeholder="Ingresa la nueva contraseña"
+            error={errors.new_password}
+            secureTextEntry={!showPassword.new}
+            maxLength={22}
+            showPasswordToggle
+            onTogglePassword={() =>
+              setShowPassword((prev) => ({ ...prev, new: !prev.new }))
+            }
+          />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Confirmar contraseña<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <View style={styles.passwordInputContainer}>
-              <Controller
-                control={control}
-                name="confirmPassword"
-                render={({ field: { onChange, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirma la contraseña"
-                    placeholderTextColor="#A0AEC0"
-                    secureTextEntry={!showPasswordConfirmar}
-                    onChangeText={onChange}
-                    value={value}
-                    maxLength={20}
-                  />
-                )}
-              />
-              <TouchableOpacity
-                style={styles.toggleButton}
-                onPress={() => setShowPasswordConfirmar(!showPasswordConfirmar)}
-              >
-                <Text style={styles.toggleText}>
-                  {showPasswordConfirmar ? "Ocultar" : "Mostrar"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {errors.confirmPassword && (
-              <Text style={styles.error}>{errors.confirmPassword.message}</Text>
-            )}
-          </View>
+          <CustomInput
+            control={control}
+            name="confirmPassword"
+            label="Confirmar contraseña"
+            placeholder="Confirma la contraseña"
+            error={errors.confirmPassword}
+            secureTextEntry={!showPassword.confirm}
+            maxLength={22}
+            showPasswordToggle
+            onTogglePassword={() =>
+              setShowPassword((prev) => ({ ...prev, confirm: !prev.confirm }))
+            }
+          />
         </View>
 
         <Text style={styles.subtitle}>
@@ -220,17 +162,11 @@ export default function PasswordChangeScreen() {
           {"\u2022"} Al menos un carácter especial (como @, #, $, etc.).
         </Text>
 
-        <TouchableOpacity
-          style={[styles.boton, { backgroundColor: buttonColor }]}
+        <CustomButton
+          title={isLoading ? "CARGANDO..." : "GUARDAR CONTRASEÑA"}
           onPress={handleSubmit(onSubmit)}
-          disabled={isLoading}
-          onPressIn={() => setButtonColor("#42A5F5")}
-          onPressOut={() => setButtonColor("#365486")}
-        >
-          <Text style={styles.botonTexto}>
-            {isLoading ? "CARGANDO..." : "GUARDAR CONTRASEÑA"}
-          </Text>
-        </TouchableOpacity>
+          isLoading={isLoading}
+        />
       </View>
     </ScrollView>
   );
@@ -262,71 +198,15 @@ const styles = {
   subtitle: {
     fontSize: 16,
     color: "#000000",
-    textAlign: "left", // Asegura que el texto esté alineado a la izquierda
+    textAlign: "left",
     marginBottom: 30,
-    lineHeight: 24, // Ajusta el espaciado entre las líneas
-  },
-  inputContainer: {
-    marginBottom: 24,
+    lineHeight: 24,
   },
   formulario: {
     gap: 20,
   },
-  label: {
-    fontSize: 14,
-    color: "#000000",
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    fontSize: 16,
-    color: "#2D3748",
-  },
-  error: {
-    color: "#E53E3E",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  boton: {
-    height: 48,
-    width: "60%",
-    backgroundColor: "#365486",
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-    alignSelf: "center",
-  },
-  botonTexto: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 40,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginRight: 20,
-  },
-  aquaSmartText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
-  },
   customAlert: {
-    backgroundColor: "#FFA7A9", // Rojo de fondo
+    backgroundColor: "#FFA7A9",
     padding: 10,
     borderRadius: 5,
     marginBottom: 20,
@@ -340,22 +220,5 @@ const styles = {
     fontSize: 16,
     fontWeight: "bold",
     marginHorizontal: 10,
-  },
-  alertIcon: {
-    marginHorizontal: 5,
-  },
-  passwordInputContainer: {
-    position: "relative",
-  },
-  toggleButton: {
-    position: "absolute",
-    right: 10,
-    top: 12,
-    zIndex: 2,
-  },
-  toggleText: {
-    color: "#4299E1",
-    fontWeight: "600",
-    fontSize: 14,
   },
 };

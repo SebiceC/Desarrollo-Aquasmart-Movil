@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import CustomUserCreateView, CustomUserListView,UserRegisterAPIView, DocumentTypeView, PersonTypeView, UserInactiveAPIView,UseroProfilelView,DocumentTypeListView,PersonTypeListView
-from .authentication import GenerateOtpPasswordRecoveryView,ResetPasswordView,ValidateOtpView, LoginView, LogoutView, ValidateTokenView
+from .views import CustomUserCreateView, CustomUserListView,UserRegisterAPIView, DocumentTypeView, PersonTypeView, UserInactiveAPIView,UseroProfilelView,DocumentTypeListView,PersonTypeListView, AdminUserUpdateAPIView
+from .authentication import GenerateOtpPasswordRecoveryView,ResetPasswordView,ValidateOtpView, LoginView, LogoutView, ValidateTokenView, ChangePasswordView
 urlpatterns = [
     path('admin/listed', CustomUserListView.as_view(), name='customuser-list'),  # Listar usuarios
     path('admin/document-type',DocumentTypeView.as_view(), name='document-type'),
@@ -17,5 +17,6 @@ urlpatterns = [
     path('validate-token', ValidateTokenView.as_view(), name='validate-token'),
     path('list-document-type',DocumentTypeListView.as_view(), name='listed-document-type'),
     path('list-person-type',PersonTypeListView.as_view(),name='listed-person-type'),
-    
+    path('change-password', ChangePasswordView.as_view(), name='change-password'),
+    path('admin/update/<str:document>', AdminUserUpdateAPIView.as_view(), name='admin-user-update'),
 ]

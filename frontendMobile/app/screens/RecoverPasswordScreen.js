@@ -1,19 +1,15 @@
 import React, { useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-  TextInput,
-} from "react-native";
-import { useForm, Controller } from "react-hook-form";
+import { ScrollView, Text, View } from "react-native";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
-import { Image } from "react-native";
 import api from "../services/api";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { AlertCustom } from "../components/AlertCustom";
+import { CustomInput } from "../components/CustomInput";
+import { CustomButton } from "../components/CustomButtom";
+import { LogoHeader } from "../components/LogoHeader";
 
 const RecoverPasswordSchema = yup.object().shape({
   document: yup
@@ -29,25 +25,19 @@ const RecoverPasswordSchema = yup.object().shape({
 });
 
 export default function RecoverPasswordScreen() {
+  const navigation = useNavigation();
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(RecoverPasswordSchema),
-    defaultValues: {
-      document: "",
-      phone: "",
-    },
+    defaultValues: { document: "", phone: "" },
   });
 
-  const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
-  const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
-
   const [showCustomAlert, setShowCustomAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     type: "info",
@@ -57,15 +47,12 @@ export default function RecoverPasswordScreen() {
   });
 
   const onSubmit = async (data) => {
-    console.log("[RecoverPassword] Iniciando envío...", data);
     setIsLoading(true);
-
     try {
       const response = await api.post("/users/generate-otp", {
         document: data.document,
         phone: data.phone,
       });
-
       console.log("[RecoverPassword] Respuesta exitosa:", response.data);
 
       setAlertConfig({
@@ -91,22 +78,15 @@ export default function RecoverPasswordScreen() {
         animationType: "slide",
       });
     } catch (error) {
-      console.error("[RecoverPassword] Error completo:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
+      console.error("[RecoverPassword] Error completo:", error);
       let errorMessage = "Error al procesar la solicitud";
-
-      if (error.response?.status === 404) {
+      if (error.response?.status === 404)
         errorMessage = "Usuario no registrado en el sistema";
-      } else if (error.response?.status === 400) {
+      if (error.response?.status === 400)
         errorMessage = "El número de teléfono no coincide con el registrado.";
-      }
 
       setAlertMessage(errorMessage);
       setShowCustomAlert(true);
-
       setTimeout(() => setShowCustomAlert(false), 5000);
     } finally {
       setIsLoading(false);
@@ -118,13 +98,7 @@ export default function RecoverPasswordScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../assets/img_M1/logo.png")}
-          style={styles.logo}
-        />
-        <Text style={styles.aquaSmartText}>AquaSmart</Text>
-      </View>
+      <LogoHeader />
 
       {showCustomAlert && (
         <View style={styles.customAlert}>
@@ -161,65 +135,34 @@ export default function RecoverPasswordScreen() {
         </Text>
 
         <View style={styles.formulario}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Cédula de Ciudadanía<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Controller
-              control={control}
-              name="document"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingresa tu Cédula de Ciudadanía"
-                  placeholderTextColor="#A0AEC0"
-                  keyboardType="numeric"
-                  onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
-                  value={value}
-                />
-              )}
-            />
-            {errors.document && (
-              <Text style={styles.error}>{errors.document.message}</Text>
-            )}
-          </View>
+          <CustomInput
+            control={control}
+            name="document"
+            label="Cédula de Ciudadanía"
+            placeholder="Ingresa tu Cédula de Ciudadanía"
+            error={errors.document}
+            keyboardType="numeric"
+            maxLength={20}
+            numericOnly
+          />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Teléfono<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingresa tu teléfono | Ej: 3012345678"
-                  placeholderTextColor="#A0AEC0"
-                  keyboardType="phone-pad"
-                  onChangeText={(text) => onChange(text.replace(/[^0-9]/g, ""))}
-                  value={value}
-                  maxLength={15}
-                />
-              )}
-            />
-            {errors.phone && (
-              <Text style={styles.error}>{errors.phone.message}</Text>
-            )}
-          </View>
+          <CustomInput
+            control={control}
+            name="phone"
+            label="Teléfono"
+            placeholder="Ingresa tu teléfono | Ej: 3012345678"
+            error={errors.phone}
+            keyboardType="phone-pad"
+            maxLength={15}
+            numericOnly
+          />
         </View>
 
-        <TouchableOpacity
-          style={[styles.boton, { backgroundColor: buttonColor }]}
+        <CustomButton
+          title={isLoading ? "CARGANDO..." : "SOLICITAR TOKEN"}
           onPress={handleSubmit(onSubmit)}
-          disabled={isLoading}
-          onPressIn={() => setButtonColor("#42A5F5")}
-          onPressOut={() => setButtonColor("#365486")}
-        >
-          <Text style={styles.botonTexto}>
-            {isLoading ? "CARGANDO..." : "SOLICITAR TOKEN"}
-          </Text>
-        </TouchableOpacity>
+          isLoading={isLoading}
+        />
       </View>
     </ScrollView>
   );
@@ -254,64 +197,8 @@ const styles = {
     marginBottom: 30,
     color: "#000000",
   },
-  inputContainer: {
-    marginBottom: 24,
-  },
   formulario: {
     gap: 20,
-  },
-  label: {
-    fontSize: 14,
-    color: "#000000",
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    fontSize: 16,
-    color: "#2D3748",
-  },
-  error: {
-    color: "#E53E3E",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  boton: {
-    height: 48,
-    width: "60%",
-    backgroundColor: "#365486",
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-    alignSelf: "center",
-  },
-  botonTexto: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 40,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginRight: 20,
-  },
-  aquaSmartText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
   },
   customAlert: {
     backgroundColor: "#FFA7A9",
