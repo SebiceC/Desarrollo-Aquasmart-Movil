@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   View,
   TextInput,
-  Alert,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -14,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { AlertCustom } from "../components/AlertCustom";
+import * as DocumentPicker from "expo-document-picker";
 
 // Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
@@ -184,7 +184,11 @@ export default function PreRegisterScreen() {
           buttons: [
             {
               text: "Iniciar sesión",
-              onPress: () => navigation.navigate("Login"),
+              onPress: () => {
+                setAlertConfig((prev) => ({ ...prev, visible: false }));
+                navigation.navigate("Login");
+              },
+              style: { backgroundColor: "#365486" },
             },
           ],
         });
@@ -194,7 +198,15 @@ export default function PreRegisterScreen() {
           type: "error",
           title: "Error en el registro",
           message: result.message || "Hubo un problema en el pre-registro.",
-          buttons: [{ text: "Reintentar" }],
+          buttons: [
+            {
+              text: "Reintentar",
+              onPress: () => {
+                setAlertConfig((prev) => ({ ...prev, visible: false }));
+              },
+              style: { backgroundColor: "#365486" },
+            },
+          ],
         });
       }
     } catch (error) {
@@ -203,7 +215,15 @@ export default function PreRegisterScreen() {
         type: "error",
         title: "Error de conexión",
         message: "No se pudo conectar con el servidor.",
-        buttons: [{ text: "Entendido" }],
+        buttons: [
+          {
+            text: "Entendido",
+            onPress: () => {
+              setAlertConfig((prev) => ({ ...prev, visible: false }));
+            },
+            style: { backgroundColor: "#365486" },
+          },
+        ],
       });
     } finally {
       setIsLoading(false);
