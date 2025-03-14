@@ -640,20 +640,20 @@ export default function PreRegisterScreen() {
           )}
           <View style={styles.botonContainer}>
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: buttonColor1 }]}
+              style={[styles.button, { backgroundColor: buttonColor }]}
               onPress={pickDocument}
-              onPressIn={() => setButtonColor1("#42A5F5")}
-              onPressOut={() => setButtonColor1("#365486")}
+              onPressIn={() => setButtonColor("#42A5F5")}
+              onPressOut={() => setButtonColor("#365486")}
             >
               <Text style={styles.botonTexto}>Seleccionar archivos</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: buttonColor2 }]}
+              style={[styles.button, { backgroundColor: buttonColor }]}
               onPress={handleSubmit(onSubmit)}
               disabled={isLoading}
-              onPressIn={() => setButtonColor2("#42A5F5")}
-              onPressOut={() => setButtonColor2("#365486")}
+              onPressIn={() => setButtonColor("#42A5F5")}
+              onPressOut={() => setButtonColor("#365486")}
             >
               <Text style={styles.botonTexto}>
                 {isLoading ? "CARGANDO..." : "REGISTRAR"}
