@@ -78,9 +78,20 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error("[Login] Error capturado:", error.message);
-      setAlertMessage(
-        error.response?.data?.message || "Credenciales incorrectas"
-      );
+
+      let errorMessage = "Credenciales incorrectas";
+      if (error.message === "User not found") {
+        errorMessage = "Usuario no encontrado";
+      } else if (
+        error.message === "Your account is inactive. Please contact support."
+      ) {
+        errorMessage = "Usuario inhabilitado, contacte con soporte";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setAlertMessage(errorMessage);
       setShowCustomAlert(true);
       setTimeout(() => setShowCustomAlert(false), 8000);
 
