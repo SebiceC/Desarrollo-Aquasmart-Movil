@@ -408,7 +408,7 @@ class ValidateTokenView(APIView):
         user = request.user
         print(user)
         try:
-            user_token = Token.objects.get(user=user)
+            Token.objects.get(user=user)
 
             # El token ya fue validado por TokenAuthentication, así que no es necesario compararlo manualmente
             return Response({"detail": "Sesión valida."}, status=status.HTTP_200_OK)

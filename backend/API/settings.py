@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'drf_spectacular',
+    'storages',
     'rest_framework.authtoken',
     'rest_framework',
     'users',
@@ -221,7 +222,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-CO'
 
 TIME_ZONE = 'UTC'
 
@@ -259,7 +260,6 @@ REST_FRAMEWORK = {
     
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Configurar los dominios permitidos
 CORS_ALLOWED_ORIGINS = [
@@ -280,3 +280,22 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.1.0",  # Aquí defines la versión
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', default=os.getenv("EMAIL_HOST_USER"))
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', default=os.getenv("EMAIL_HOST_PASSWORD"))  
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Configuración de Google Drive
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, 'API/google/client_secret.json')
+GOOGLE_DRIVE_STORAGE_MEDIA_ROOT = 'Prueba'
+
+# Configuración de Django Storages
+DEFAULT_FILE_STORAGE = 'storages.backends.google_drive.GoogleDriveStorage'
