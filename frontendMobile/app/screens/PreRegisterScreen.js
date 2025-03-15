@@ -127,10 +127,10 @@ export default function PreRegisterScreen() {
     async function fetchTypes() {
       try {
         const docRes = await fetch(
-          "http://127.0.0.1:8000/api/users/list-document-type"
+          "https://desarrollo-aquasmart-backend-yhde.onrender.com/api/users/list-document-type"
         );
         const personRes = await fetch(
-          "http://127.0.0.1:8000/api/users/list-person-type"
+          "https://desarrollo-aquasmart-backend-yhde.onrender.com/api/users/list-person-type"
         );
 
         const docData = await docRes.json();
@@ -152,7 +152,7 @@ export default function PreRegisterScreen() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/users/pre-register",
+        "https://desarrollo-aquasmart-backend-yhde.onrender.com/api/users/pre-register",
         {
           method: "POST",
           headers: {
