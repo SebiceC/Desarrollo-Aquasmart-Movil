@@ -15,6 +15,8 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 import dj_database_url
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +27,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'django-insecure-^^^-)t#5(#p4#g*7j$#yvgo0bb4zzmm6-@15y41k^4+m!x#jg4'
 SECRET_KEY = os.environ.get('SECRET_KEY', default=os.getenv("SECRET_KEY"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -47,10 +48,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'drf_spectacular',
+    'storages',
+    'rest_framework.authtoken',
     'rest_framework',
     'users',
     'iot',
-    'plots_lots',
+    'plots_lots'
     
 ]
 
@@ -112,12 +115,91 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
+class MaximumLengthValidator:
+    """
+    Valida que la contraseña no exceda un número máximo de caracteres.
+    """
+    def __init__(self, max_length=20):
+        self.max_length = max_length
+        
+    def validate(self, password, user=None):
+        if len(password) > self.max_length:
+            raise ValidationError(
+                _("La contraseña no puede tener más de %(max_length)d caracteres."),
+                code='password_too_long',
+                params={'max_length': self.max_length},
+            )
+            
+    def get_help_text(self):
+        return _("Tu contraseña no puede tener más de %(max_length)d caracteres.") % {'max_length': self.max_length}
+        
+class UppercaseValidator:
+    """
+    Valida que la contraseña contenga al menos una letra mayúscula.
+    """
+    def validate(self, password, user=None):
+        if not any(char.isupper() for char in password):
+            raise ValidationError(
+                _("La contraseña debe contener al menos una letra mayúscula."),
+                code='password_no_upper',
+            )
+            
+    def get_help_text(self):
+        return _("Tu contraseña debe contener al menos una letra mayúscula.")
+        
+class LowercaseValidator:
+    """
+    Valida que la contraseña contenga al menos una letra minúscula.
+    """
+    def validate(self, password, user=None):
+        if not any(char.islower() for char in password):
+            raise ValidationError(
+                _("La contraseña debe contener al menos una letra minúscula."),
+                code='password_no_lower',
+            )
+            
+    def get_help_text(self):
+        return _("Tu contraseña debe contener al menos una letra minúscula.")
+        
+class SpecialCharValidator:
+    """
+    Valida que la contraseña contenga al menos un carácter especial.
+    """
+    def __init__(self, special_chars="@#$%^&*()_+-=[]{}|;:'\",.<>/?`~"):
+        self.special_chars = special_chars
+        
+    def validate(self, password, user=None):
+        if not any(char in self.special_chars for char in password):
+            raise ValidationError(
+                _("La contraseña debe contener al menos un carácter especial (como @, #, $, etc.)."),
+                code='password_no_symbol',
+            )
+            
+    def get_help_text(self):
+        return _("Tu contraseña debe contener al menos un carácter especial (como @, #, $, etc.).")
+
+
+# Luego, busca la sección AUTH_PASSWORD_VALIDATORS en tu settings.py y reemplázala con:
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'user_attributes': ['document', 'first_name', 'last_name', 'email', 'phone'],
+            'max_similarity': 0.7,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+    {
+        'NAME': 'API.settings.MaximumLengthValidator',  # Usa la ruta completa al módulo
+        'OPTIONS': {
+            'max_length': 20,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -125,13 +207,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'API.settings.UppercaseValidator',  # Usa la ruta completa al módulo
+    },
+    {
+        'NAME': 'API.settings.LowercaseValidator',  # Usa la ruta completa al módulo
+    },
+    {
+        'NAME': 'API.settings.SpecialCharValidator',  # Usa la ruta completa al módulo
+    },
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-CO'
 
 TIME_ZONE = 'UTC'
 
@@ -160,34 +251,28 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'API.custom_auth.CustomTokenAuthentication',
+    ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ]
     
 }
-SIMPLE_JWT = {
-    'USER_ID_FIELD': 'document',  # Cambia 'document' por el nombre del campo identificador en tu modelo
-    'USER_ID_CLAIM': 'user_id', # Nombre de la clave que se incluirá en el token
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': False,
-}
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Configurar los dominios permitidos
 CORS_ALLOWED_ORIGINS = [
     "https://tu-frontend.com",
     "http://localhost:5173",  # Para desarrollo con React
-    "http://localhost:8081",  # Para desarrollo con Reac Native
+    "http://localhost:8081",
+    "https://desarrollo-aqua-smart-frontend-mu.vercel.app",
+    "https://desarrollo-aquasmart-frontend2.vercel.app",
+    "https://desarrollo-aqua-smart-frontend-six.vercel.app",
 ]
 
 # También puedes permitir todas las solicitudes (NO recomendado en producción)
-CORS_ALLOW_ALL_ORIGINS = True  # O usar CORS_ALLOWED_ORIGINS para mayor control
+#CORS_ALLOW_ALL_ORIGINS = True  # O usar CORS_ALLOWED_ORIGINS para mayor control
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "AQUASMART",
@@ -195,3 +280,22 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.1.0",  # Aquí defines la versión
     "SERVE_INCLUDE_SCHEMA": False,
 }
+
+#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', default=os.getenv("EMAIL_HOST_USER"))
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', default=os.getenv("EMAIL_HOST_PASSWORD"))  
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Configuración de Google Drive
+GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, 'API/google/client_secret.json')
+GOOGLE_DRIVE_STORAGE_MEDIA_ROOT = 'Prueba'
+
+# Configuración de Django Storages
+DEFAULT_FILE_STORAGE = 'storages.backends.google_drive.GoogleDriveStorage'

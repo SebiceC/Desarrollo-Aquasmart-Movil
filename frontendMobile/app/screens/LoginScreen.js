@@ -1,25 +1,26 @@
-import { useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  Alert,
-  View,
-  TextInput,
-} from "react-native";
+import React, { useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { login } from "../services/authService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { AlertCustom } from "../components/AlertCustom";
+import { CustomInput } from "../components/CustomInput";
+import { CustomButton } from "../components/CustomButtom";
+import { LogoHeader } from "../components/LogoHeader";
 
-// Esquema de validación
 const loginSchema = yup.object().shape({
   document: yup
     .string()
-    .matches(/^\d{1,12}$/, "Cédula inválida")
-    .required("Campo obligatorio"),
-  password: yup.string().required("Campo obligatorio"),
+    .required("Campo obligatorio")
+    .matches(/^\d{6,12}$/, "Cédula inválida"),
+  password: yup
+    .string()
+    .required("Campo obligatorio")
+    .max(20, "Máximo 20 caracteres"),
 });
 
 export default function LoginScreen() {
@@ -30,23 +31,97 @@ export default function LoginScreen() {
     formState: { errors },
   } = useForm({
     resolver: yupResolver(loginSchema),
+    defaultValues: { document: "", password: "" },
   });
+
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showCustomAlert, setShowCustomAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+    buttons: [],
+  });
 
   const onSubmit = async (data) => {
-    console.log("Datos enviados", data);
     setIsLoading(true);
     try {
-      const response = await login(data); // Llamada al backend
-      console.log("Servidor:", response);
+      await AsyncStorage.removeItem("authToken");
+      const response = await login(data);
+      console.log("[Login] Respuesta del backend:", response);
+
       if (response.document) {
-        Alert.alert("Message", response.message);
-      } else {
-        Alert.alert("Error", "Credenciales incorrectas");
+        setAlertConfig({
+          visible: true,
+          type: "info",
+          title: "TOKEN ENVIADO",
+          message:
+            "Se ha enviado un token de 6 caracteres\na tu número de teléfono registrado.",
+          buttons: [
+            {
+              text: "CONFIRMAR",
+              onPress: () => {
+                setAlertConfig((prev) => ({ ...prev, visible: false }));
+                navigation.navigate("TokenValidationScreen", {
+                  document: data.document,
+                  phone: data.phone,
+                });
+              },
+              style: { backgroundColor: "#365486" },
+            },
+          ],
+          animationType: "slide",
+        });
       }
     } catch (error) {
-      console.error("Error completo:", error);
-      Alert.alert("Error", error.message);
+      console.error("[Login] Error capturado:", error.message);
+
+      let errorMessage = "Credenciales incorrectas";
+      if (error.message === "User not found") {
+        errorMessage = "Usuario no encontrado";
+      } else if (
+        error.message === "Your account is inactive. Please contact support."
+      ) {
+        errorMessage = "Usuario inhabilitado, contacte con soporte";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setAlertMessage(errorMessage);
+      setShowCustomAlert(true);
+      setTimeout(() => setShowCustomAlert(false), 8000);
+
+      if (
+        error.response?.status === 403 &&
+        error.response.data?.error?.detail
+      ) {
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          message: "Error en el inicio de sesión, ya existe una sesión activa.",
+          buttons: [{ text: "VOLVER" }],
+        });
+      } else if (error.message.startsWith("Último intento")) {
+        setAlertConfig({
+          visible: true,
+          type: "warning",
+          title: "¡ADVERTENCIA!",
+          message: "Último intento antes de bloqueo por 30 minutos",
+          buttons: [{ text: "ENTENDIDO" }],
+        });
+      } else if (error.message.startsWith("Usuario bloqueado")) {
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          title: "CUENTA BLOQUEADA",
+          message: "Usuario bloqueado por 30 minutos",
+          buttons: [{ text: "ENTENDIDO" }],
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,156 +132,109 @@ export default function LoginScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.contenedorPrincipal}>
-        {/* Título */}
-        <Text style={styles.titulo}>INICIO DE SESIÓN</Text>
-        <View style={styles.formulario}>
-          {/* Campo Cédula */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Cedula de Ciudadanía<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Controller
-              control={control}
-              name="document"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingressa tu Cedula de Ciudadanía"
-                  placeholderTextColor="#A0AEC0"
-                  keyboardType="numeric"
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-            {errors.cedula && (
-              <Text style={styles.error}>{errors.cedula.message}</Text>
-            )}
-          </View>
+      <LogoHeader />
 
-          {/* Campo Contraseña */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Contraseña<Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ingressa tu contraseña"
-                  placeholderTextColor="#A0AEC0"
-                  secureTextEntry
-                  onChangeText={onChange}
-                  value={value}
-                />
-              )}
-            />
-            {errors.password && (
-              <Text style={styles.error}>{errors.password.message}</Text>
-            )}
-          </View>
+      {showCustomAlert && (
+        <View style={styles.customAlert}>
+          <Icon
+            name="warning"
+            size={20}
+            color="#757777"
+            style={styles.alertIcon}
+          />
+          <Text style={styles.alertText}>{alertMessage}</Text>
+          <Icon
+            name="warning"
+            size={20}
+            color="#656767"
+            style={styles.alertIcon}
+          />
+        </View>
+      )}
+
+      <AlertCustom
+        visible={alertConfig.visible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
+      />
+
+      <View style={styles.contenedorPrincipal}>
+        <Text style={styles.titulo}>INICIO DE SESIÓN</Text>
+
+        <View style={styles.formulario}>
+          <CustomInput
+            control={control}
+            name="document"
+            label="Cédula de Ciudadanía"
+            placeholder="Ingresa tu Cedula de Ciudadanía"
+            error={errors.document}
+            keyboardType="numeric"
+            maxLength={20}
+            numericOnly
+            rules={{ required: true }}
+          />
+
+          <CustomInput
+            control={control}
+            name="password"
+            label="Contraseña"
+            placeholder="Ingresa tu contraseña"
+            error={errors.password}
+            secureTextEntry={!showPassword}
+            showPasswordToggle
+            onTogglePassword={() => setShowPassword(!showPassword)}
+          />
         </View>
 
-        {/* Enlaces */}
         <View style={styles.enlacesContainer}>
           <TouchableOpacity
             onPress={() => navigation.navigate("RecoverPassword")}
           >
             <Text style={styles.enlace}>OLVIDE MI CONTRASEÑA</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <TouchableOpacity onPress={() => navigation.navigate("PreRegister")}>
             <Text style={styles.enlace}>SOY USUARIO NUEVO</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Botón */}
-        <TouchableOpacity
-          style={styles.boton}
+        <CustomButton
+          title={isLoading ? "CARGANDO..." : "INICIAR SESIÓN"}
           onPress={handleSubmit(onSubmit)}
-          disabled={isLoading}
-        >
-          <Text style={styles.botonTexto}>
-            {isLoading ? "CARGANDO..." : "INICIAR SESIÓN"}
-          </Text>
-        </TouchableOpacity>
+          isLoading={isLoading}
+        />
       </View>
     </ScrollView>
   );
 }
 
-// Estilos
 const styles = {
-  scrollContainer: {
-    flexGrow: 1,
-    backgroundColor: "#dcf2f1", // Fondo azul general
-    padding: 20,
-  },
-  contenedorPrincipal: {
-    backgroundColor: "#b7e1e7",
-    borderColor: "#7aa6c4",
-    borderRadius: 20, // Bordes redondeados
-    padding: 25,
-    elevation: 5,
-  },
   container: {
     flexGrow: 1,
     justifyContent: "center",
     backgroundColor: "#dcf2f1",
     padding: 24,
   },
+  contenedorPrincipal: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#000000",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    padding: 25,
+    elevation: 5,
+  },
   titulo: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#2D3748",
+    color: "#000000",
     textAlign: "center",
     marginBottom: 40,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  inputContainer: {
-    marginBottom: 24,
   },
   formulario: {
     gap: 20,
-  },
-  label: {
-    fontSize: 14,
-    color: "#4A5568",
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    fontSize: 16,
-    color: "#2D3748",
-  },
-  error: {
-    color: "#E53E3E",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  boton: {
-    height: 48,
-    backgroundColor: "#4299E1",
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  botonTexto: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textTransform: "uppercase",
   },
   enlacesContainer: {
     marginTop: 32,
@@ -214,9 +242,28 @@ const styles = {
   },
   enlace: {
     color: "#2D3748",
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
     textDecorationLine: "underline",
+  },
+  customAlert: {
+    backgroundColor: "#FFA7A9",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    flexDirection: "row",
+  },
+  alertText: {
+    color: "#757777",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginHorizontal: 10,
+  },
+  alertIcon: {
+    marginHorizontal: 5,
   },
 };
