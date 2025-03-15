@@ -63,7 +63,7 @@ const NavbarLayout = ({ children, navigation }) => {
     {
       icon: "security",
       title: "Seguridad",
-      action: () => navigation.navigate("Seguridad"),
+      action: () => navigation.navigate("PasswordUpdate"),
     },
     {
       icon: "help-outline",
