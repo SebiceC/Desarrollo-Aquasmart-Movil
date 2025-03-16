@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api", // URL del backend
+  baseURL: "https://desarrollo-aquasmart-backend-yhde.onrender.com/api", // URL del backend https://desarrollo-aquasmart-backend-yhde.onrender.com/api
   headers: {
     "Content-Type": "application/json",
   },
@@ -14,6 +14,9 @@ api.interceptors.request.use(async (config) => {
     "/users/validate-otp",
     "/users/generate-otp",
     "/users/reset-password",
+    "/users/pre-register",
+    "users/list-document-type",
+    "users/list-person-type",
   ];
 
   // Agregar token a TODAS las rutas excepto las públicas
