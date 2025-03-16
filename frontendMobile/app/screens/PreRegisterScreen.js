@@ -30,16 +30,16 @@ const PreRegisterSchema = yup.object().shape({
     .max(20, "Máximo 20 caracteres"),
   identificacion: yup
     .string()
-    .matches(/^\d{6,12}$/, "Debe tener entre 6 y 12 dígitos")
+    .matches(/^\d{6,15}$/, "Debe tener entre 6 y 15 dígitos")
     .required("Campo obligatorio"),
   direccion: yup
     .string()
-    .max(30, "Máximo 30 caracteres")
+    .max(35, "Máximo 35 caracteres")
     .required("Campo obligatorio"),
   telefono: yup
     .string()
     .required("Campo obligatorio")
-    .matches(/^\d{7,13}$/, "Debe tener entre 7 y 13 dígitos"),
+    .matches(/^\d{10,13}$/, "Debe tener entre 10 y 13 dígitos"),
   email: yup
     .string()
     .email("Correo inválido")
@@ -53,7 +53,7 @@ const PreRegisterSchema = yup.object().shape({
     .matches(/[a-z]/, "Debe contener al menos una minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
     .matches(
-      /[!@#$%^&*()_+\-=\{}|\:;"'<>,.?/]/,
+      /[!@#$%^&*()_+-={}|:;"'<>,.?/]/,
       "Debe contener un carácter especial"
     )
     .required("Campo obligatorio"),
@@ -67,12 +67,10 @@ const PreRegisterSchema = yup.object().shape({
 
 export default function PreRegisterScreen() {
   const navigation = useNavigation();
-  const [selectedOption, setSelectedOption] = useState("opcion1"); // Estado para el selector
   const [showPassword, setShowPassword] = useState(false); // Estado para Contraseña
   const [showPasswordConfirmar, setShowPasswordConfirmar] = useState(false); // Estado para Confirmar Contraseña
   const [documentTypes, setDocumentTypes] = useState([]);
   const [personTypes, setPersonTypes] = useState([]);
-  const [showAlert, setShowAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
   const {
@@ -475,7 +473,7 @@ export default function PreRegisterScreen() {
                   placeholderTextColor="#A0AEC0"
                   onChangeText={(text) => {
                     onChange(text); // Permitir que el usuario siga escribiendo
-                    if (text.length > 30) {
+                    if (text.length > 35) {
                       setAlertStates((prevState) => ({
                         ...prevState,
                         direccion: true,

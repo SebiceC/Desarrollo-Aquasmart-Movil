@@ -15,12 +15,12 @@ const RecoverPasswordSchema = yup.object().shape({
   document: yup
     .string()
     .required("Campo obligatorio")
-    .matches(/^\d{6,12}$/, "Cédula inválida"),
+    .matches(/^\d{6,15}$/, "Cédula inválida"),
   phone: yup
     .string()
     .required("Campo obligatorio")
     .min(10, "Mínimo 10 dígitos")
-    .max(15, "Máximo 15 dígitos")
+    .max(13, "Máximo 13 dígitos")
     .matches(/^[0-9]+$/, "Solo números permitidos"),
 });
 
@@ -142,7 +142,7 @@ export default function RecoverPasswordScreen() {
             placeholder="Ingresa tu Cédula de Ciudadanía"
             error={errors.document}
             keyboardType="numeric"
-            maxLength={20}
+            maxLength={15}
             numericOnly
           />
 
@@ -153,7 +153,7 @@ export default function RecoverPasswordScreen() {
             placeholder="Ingresa tu teléfono | Ej: 3012345678"
             error={errors.phone}
             keyboardType="phone-pad"
-            maxLength={15}
+            maxLength={13}
             numericOnly
           />
         </View>

@@ -82,7 +82,7 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={styles.infoRow}>
             <MaterialIcons name="person-outline" size={20} color="#000" />
-            <Text style={styles.infoText}>{userData.personType}</Text>
+            <Text style={styles.infoText}> Persona {userData.personType}</Text>
           </View>
 
           <View style={styles.infoRow}>

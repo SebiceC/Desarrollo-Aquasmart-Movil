@@ -5,6 +5,8 @@ import PreRegisterScreen from "../screens/PreRegisterScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import RecoverPasswordScreen from "../screens/RecoverPasswordScreen";
 import PasswordChangeScreen from "../screens/PasswordChangeScreen";
+import PasswordUpdateScreen from "../screens/PasswordUpdateScreen";
+
 
 const Stack = createStackNavigator();
 
@@ -20,6 +22,7 @@ export default function AppNavigator() {
         component={TokenValidationScreen}
       />
       <Stack.Screen name="Home" component={ProfileScreen} />
+      <Stack.Screen name="PasswordUpdate" component={PasswordUpdateScreen} />
       <Stack.Screen name="RecoverPassword" component={RecoverPasswordScreen} />
       <Stack.Screen name="PasswordChange" component={PasswordChangeScreen} />
       <Stack.Screen name="PreRegister" component={PreRegisterScreen} />
