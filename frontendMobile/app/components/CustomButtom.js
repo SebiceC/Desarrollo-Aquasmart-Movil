@@ -14,45 +14,47 @@ export const CustomButton = ({
   style,
   disabled = false,
 }) => {
+  // Definición de variantes de color
   const variants = {
-    primary: { bg: "#365486", pressedBg: "#42A5F5" },
-    secondary: { bg: "#2C7A7B", pressedBg: "#38B2AC" },
+    primary: { bg: "#000000", pressedBg: "#42A5F5" }, // Azul principal
+    secondary: { bg: "#2C7A7B", pressedBg: "#38B2AC" }, // Verde secundario
   };
 
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        { backgroundColor: disabled ? "#CBD5E0" : variants[variant].bg },
-        style,
+        { backgroundColor: disabled ? "#CBD5E0" : variants[variant].bg }, // Color de fondo deshabilitado
+        style, // Estilos personalizados adicionales
       ]}
       onPress={onPress}
-      disabled={disabled || isLoading}
-      activeOpacity={0.8}
+      disabled={disabled || isLoading} // Deshabilitar si está en estado de carga o deshabilitado
+      activeOpacity={0.8} // Efecto de opacidad al presionar
     >
       {isLoading ? (
-        <ActivityIndicator color="#FFFFFF" />
+        <ActivityIndicator color="#FFFFFF" /> // Indicador de carga
       ) : (
-        <Text style={styles.buttonText}>{title}</Text>
+        <Text style={styles.buttonText}>{title}</Text> // Texto del botón
       )}
     </TouchableOpacity>
   );
 };
 
+// Estilos del botón
 const styles = StyleSheet.create({
   button: {
-    height: 48,
-    width: "60%",
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginVertical: 10,
+    height: 48, // Altura fija
+    width: "60%", // Ancho del 60%
+    borderRadius: 6, // Bordes redondeados
+    justifyContent: "center", // Centrar contenido verticalmente
+    alignItems: "center", // Centrar contenido horizontalmente
+    alignSelf: "center", // Centrar el botón en su contenedor
+    marginVertical: 10, // Margen vertical
   },
   buttonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    color: "#FFFFFF", // Color del texto
+    fontSize: 15, // Tamaño de la fuente
+    fontWeight: "700", // Grosor de la fuente
+    textTransform: "uppercase", // Texto en mayúsculas
   },
 });

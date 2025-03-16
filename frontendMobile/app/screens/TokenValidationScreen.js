@@ -13,6 +13,7 @@ import { Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AlertCustom } from "../components/AlertCustom";
+import CustomTitle from "../components/CustomTitle";
 
 export default function TokenValidationScreen() {
   const navigation = useNavigation();
@@ -167,8 +168,7 @@ export default function TokenValidationScreen() {
       />
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.title}>INGRESO DE TOKEN</Text>
-
+                <CustomTitle>INGRESO DE TOKEN</CustomTitle>
         <Text style={styles.subtitle}>
           Introduce el token enviado por SMS a tu teléfono. Recuerda que expira
           en 5 minutos.
@@ -251,13 +251,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 25,
     elevation: 5,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#000000",
   },
   subtitle: {
     fontSize: 16,

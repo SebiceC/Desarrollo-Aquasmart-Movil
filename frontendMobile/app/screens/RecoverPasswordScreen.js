@@ -10,6 +10,7 @@ import { AlertCustom } from "../components/AlertCustom";
 import { CustomInput } from "../components/CustomInput";
 import { CustomButton } from "../components/CustomButtom";
 import { LogoHeader } from "../components/LogoHeader";
+import CustomTitle from "../components/CustomTitle";
 
 const RecoverPasswordSchema = yup.object().shape({
   document: yup
@@ -128,7 +129,7 @@ export default function RecoverPasswordScreen() {
       />
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.titulo}>RECUPERACIÓN DE CONTRASEÑA</Text>
+      <CustomTitle>RECUPERACIÓN DE CONTRASEÑA</CustomTitle>
         <Text style={styles.subtitle}>
           Introduce tu cédula de ciudadanía y teléfono, para solicitar un token
           y recuperar tu contraseña.
@@ -182,14 +183,6 @@ const styles = {
     borderWidth: 1.5,
     padding: 25,
     elevation: 5,
-  },
-  titulo: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#000000",
-    textAlign: "center",
-    marginBottom: 40,
-    textTransform: "uppercase",
   },
   subtitle: {
     fontSize: 16,

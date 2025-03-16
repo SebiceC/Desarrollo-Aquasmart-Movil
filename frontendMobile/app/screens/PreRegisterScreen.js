@@ -15,6 +15,7 @@ import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { AlertCustom } from "../components/AlertCustom";
 import * as DocumentPicker from "expo-document-picker";
+import CustomTitle from "../components/CustomTitle";
 
 // Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
@@ -270,8 +271,7 @@ export default function PreRegisterScreen() {
       />
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.titulo}>PRE REGISTRO</Text>
-
+        <CustomTitle>PRE REGISTRO</CustomTitle>
         <View style={styles.formulario}>
           {/* NOMBRE */}
           <View style={styles.inputContainer}>
@@ -351,6 +351,38 @@ export default function PreRegisterScreen() {
               <Text style={styles.error}>Máximo 20 caracteres permitidos.</Text>
             )}
           </View>
+          {/* tIPO DE PERSONA */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              Selecciona el tipo de persona
+              <Text style={{ color: "red" }}> *</Text>
+            </Text>
+            <Controller
+              control={control}
+              name="tipoPersona"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.pickerContainer}>
+                  <Picker selectedValue={value} onValueChange={onChange}>
+                    <Picker.Item label="Seleccione una opción" value="" />
+                    {personTypes.length > 0 ? (
+                      personTypes.map((person) => (
+                        <Picker.Item
+                          key={person.personTypeId}
+                          label={person.typeName}
+                          value={person.personTypeId}
+                        />
+                      ))
+                    ) : (
+                      <Picker.Item label="No hay datos" value="" />
+                    )}
+                  </Picker>
+                </View>
+              )}
+            />
+            {errors.tipoPersona && (
+              <Text style={styles.error}>{errors.tipoPersona.message}</Text>
+            )}
+          </View>
           {/* TIPO IDENTIFICACION */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
@@ -424,38 +456,6 @@ export default function PreRegisterScreen() {
             )}
             {alertStates.identificacion && (
               <Text style={styles.error}>Máximo 15 caracteres permitidos.</Text>
-            )}
-          </View>
-          {/* tIPO DE PERSONA */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-              Selecciona el tipo de persona
-              <Text style={{ color: "red" }}> *</Text>
-            </Text>
-            <Controller
-              control={control}
-              name="tipoPersona"
-              render={({ field: { onChange, value } }) => (
-                <View style={styles.pickerContainer}>
-                  <Picker selectedValue={value} onValueChange={onChange}>
-                    <Picker.Item label="Seleccione una opción" value="" />
-                    {personTypes.length > 0 ? (
-                      personTypes.map((person) => (
-                        <Picker.Item
-                          key={person.personTypeId}
-                          label={person.typeName}
-                          value={person.personTypeId}
-                        />
-                      ))
-                    ) : (
-                      <Picker.Item label="No hay datos" value="" />
-                    )}
-                  </Picker>
-                </View>
-              )}
-            />
-            {errors.tipoPersona && (
-              <Text style={styles.error}>{errors.tipoPersona.message}</Text>
             )}
           </View>
           {/* DIRECCION */}
@@ -723,14 +723,6 @@ const styles = {
     padding: 25,
     elevation: 5,
     marginTop: 20, // Reducir el margen superior para acercar el contenedor más arriba
-  },
-  titulo: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#000000",
-    textAlign: "center",
-    marginBottom: 40,
-    textTransform: "uppercase",
   },
   subtitle: {
     fontSize: 16,

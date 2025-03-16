@@ -10,6 +10,7 @@ import { AlertCustom } from "../components/AlertCustom";
 import { CustomInput } from "../components/CustomInput";
 import { CustomButton } from "../components/CustomButtom";
 import { LogoHeader } from "../components/LogoHeader";
+import CustomTitle from "../components/CustomTitle";
 
 const loginSchema = yup.object().shape({
   document: yup
@@ -160,8 +161,7 @@ export default function LoginScreen() {
       />
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.titulo}>INICIO DE SESIÓN</Text>
-
+      <CustomTitle>INICIO DE SESIÓN</CustomTitle>
         <View style={styles.formulario}>
           <CustomInput
             control={control}
@@ -222,14 +222,6 @@ const styles = {
     borderWidth: 1.5,
     padding: 25,
     elevation: 5,
-  },
-  titulo: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#000000",
-    textAlign: "center",
-    marginBottom: 40,
-    textTransform: "uppercase",
   },
   formulario: {
     gap: 20,
