@@ -10,6 +10,7 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
+import api from "../services/api";
 import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { AlertCustom } from "../components/AlertCustom";
@@ -126,15 +127,11 @@ export default function PreRegisterScreen() {
   useEffect(() => {
     async function fetchTypes() {
       try {
-        const docRes = await fetch(
-          "http://127.0.0.1:8000/api/users/list-document-type"
-        );
-        const personRes = await fetch(
-          "http://127.0.0.1:8000/api/users/list-person-type"
-        );
+        const docRes = await api.get("/users/list-document-type");
+        const personRes = await api.get("/users/list-person-type");
 
-        const docData = await docRes.json();
-        const personData = await personRes.json();
+        const docData = docRes.data;
+        const personData = personRes.data;
 
         console.log("Respuesta tipos de documento:", docData);
         console.log("Respuesta tipos de persona:", personData);
@@ -151,29 +148,23 @@ export default function PreRegisterScreen() {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/users/pre-register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            document: data.identificacion,
-            first_name: data.nombre,
-            last_name: data.apellido,
-            email: data.email,
-            document_type: data.tipoIdentificacion,
-            person_type: data.tipoPersona,
-            phone: data.telefono,
-            address: data.direccion,
-            password: data.Contraseña,
-          }),
-        }
-      );
-      const result = await response.json();
-      console.log("Respuesta del backend:", result);
-      if (response.ok) {
+      const response = await api.post("/users/pre-register", {
+        document: data.identificacion,
+        first_name: data.nombre,
+        last_name: data.apellido,
+        email: data.email,
+        document_type: data.tipoIdentificacion,
+        person_type: data.tipoPersona,
+        phone: data.telefono,
+        address: data.direccion,
+        password: data.Contraseña,
+      });
+
+      console.log("Respuesta completa:", response);
+
+      const result = response.data;
+
+      if (response.status === 200 || response.status === 201) {
         setAlertConfig({
           visible: true,
           type: "success",
@@ -208,21 +199,49 @@ export default function PreRegisterScreen() {
         });
       }
     } catch (error) {
-      setAlertConfig({
-        visible: true,
-        type: "error",
-        title: "Error de conexión",
-        message: "No se pudo conectar con el servidor.",
-        buttons: [
-          {
-            text: "Entendido",
-            onPress: () => {
-              setAlertConfig((prev) => ({ ...prev, visible: false }));
+      if (error.response?.status === 400) {
+        const errorData = error.response.data;
+        let errorMessage = "";
+
+        if (errorData.document) {
+          errorMessage += errorData.document[0] + "\n";
+        }
+        if (errorData.email) {
+          errorMessage += errorData.email[0];
+        }
+
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          title: "Error en el registro",
+          message: errorMessage.trim(),
+          buttons: [
+            {
+              text: "Entendido",
+              onPress: () => {
+                setAlertConfig((prev) => ({ ...prev, visible: false }));
+              },
+              style: { backgroundColor: "#365486" },
             },
-            style: { backgroundColor: "#365486" },
-          },
-        ],
-      });
+          ],
+        });
+      } else {
+        setAlertConfig({
+          visible: true,
+          type: "error",
+          title: "Error de conexión",
+          message: "No se pudo conectar con el servidor.",
+          buttons: [
+            {
+              text: "Entendido",
+              onPress: () => {
+                setAlertConfig((prev) => ({ ...prev, visible: false }));
+              },
+              style: { backgroundColor: "#365486" },
+            },
+          ],
+        });
+      }
     } finally {
       setIsLoading(false);
     }

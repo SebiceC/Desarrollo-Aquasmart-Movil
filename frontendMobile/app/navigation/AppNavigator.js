@@ -17,7 +17,10 @@ export default function AppNavigator() {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="TokenValidationScreen" component={TokenValidationScreen}/>
+      <Stack.Screen
+        name="TokenValidationScreen"
+        component={TokenValidationScreen}
+      />
       <Stack.Screen name="Home" component={ProfileScreen} />
       <Stack.Screen name="PasswordUpdate" component={PasswordUpdateScreen} />
       <Stack.Screen name="RecoverPassword" component={RecoverPasswordScreen} />
