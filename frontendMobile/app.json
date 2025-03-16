@@ -1,23 +1,31 @@
 {
   "expo": {
-    "name": "frontendMobile",
-    "slug": "frontendMobile",
+    "name": "AquaSmart",
+    "slug": "AquaSmart",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
+    "icon": "./app/assets/img_M1/logo.png",
     "android": {
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE"
       ],
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "package": "com.joseesteban8.AquaSmart"
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c83bda49-7e48-413b-b7dc-9cc300dae250"
+      }
+    },
+    "owner": "joseesteban8"
   }
 }

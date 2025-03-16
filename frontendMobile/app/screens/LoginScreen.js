@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { login } from "../services/authService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { AlertCustom } from "../components/AlertCustom";
 import { CustomInput } from "../components/CustomInput";
@@ -49,7 +48,6 @@ export default function LoginScreen() {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      await AsyncStorage.removeItem("authToken");
       const response = await login(data);
       console.log("[Login] Respuesta del backend:", response);
 
@@ -67,7 +65,7 @@ export default function LoginScreen() {
                 setAlertConfig((prev) => ({ ...prev, visible: false }));
                 navigation.navigate("TokenValidationScreen", {
                   document: data.document,
-                  phone: data.phone,
+                  phone: response.phone || data.phone,
                 });
               },
               style: { backgroundColor: "#365486" },

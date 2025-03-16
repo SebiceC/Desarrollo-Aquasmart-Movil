@@ -5,19 +5,28 @@ export const login = async (credentials) => {
   try {
     const response = await api.post("/users/login", credentials);
 
-    await AsyncStorage.setItem("authToken", response.data.token);
+    if (response.data.document) {
+      return response.data;
+    }
+
+    if (response.data.token) {
+      await AsyncStorage.setItem("authToken", response.data.token);
+    }
+
     return response.data;
   } catch (error) {
-    // Capturar errores de red
-    if (!error.response) {
-      throw new Error("No hay conexión con el servidor");
-    }
-    // Capturar mensajes del backend
-    console.log("[Login] Error completo:", error.response?.data);
+    console.error("[Login] Error:", error);
 
-    throw new Error(
-      error.response?.data?.error?.detail || "Usuario no encontrado"
-    );
+    if (!error.response) {
+      throw error;
+    }
+
+    // Manejo específico de errores del backend
+    const backendError =
+      error.response?.data?.error?.detail ||
+      error.response?.data?.message ||
+      "Error en el inicio de sesión";
+    throw new Error(backendError);
   }
 };
 

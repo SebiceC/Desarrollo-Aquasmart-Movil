@@ -8,6 +8,19 @@ const api = axios.create({
   },
 });
 
+// Interceptor para manejar errores de red
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      // Error de red o servidor no disponible
+      console.error("Error de conexión:", error);
+      return Promise.reject(new Error("No hay conexión con el servidor"));
+    }
+    return Promise.reject(error);
+  }
+);
+
 api.interceptors.request.use(async (config) => {
   const publicEndpoints = [
     "/users/login",
