@@ -28,10 +28,6 @@ const PasswordUpdateSchema = yup.object().shape({
       [yup.ref("current_password")],
       "Debe ser diferente de la contraseña actual"
     ),
-    .notOneOf(
-      [yup.ref("current_password")],
-      "Debe ser diferente de la contraseña actual"
-    ),
   confirm_password: yup
     .string()
     .oneOf([yup.ref("new_password")], "Las contraseñas no coinciden")
@@ -85,11 +81,9 @@ export default function PasswordUpdateScreen({ navigation }) {
     } catch (error) {
       console.error("[Cambio de contraseña] Error:", error.message);
 
-
       if (error.response && error.response.data) {
         const errorData = error.response.data;
         let errorMessage = "Error al actualizar la contraseña";
-
 
         if (errorData.detail) {
           errorMessage = errorData.detail;
@@ -117,9 +111,7 @@ export default function PasswordUpdateScreen({ navigation }) {
 
   return (
     <NavbarLayout navigation={navigation}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView keyboardShouldPersistTaps="handled">
         <SafeAreaView style={styles.container}>
           <CustomTitle>Actualización de Contraseña</CustomTitle>
           <CustomInput
