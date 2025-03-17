@@ -37,8 +37,6 @@ export default function RecoverPasswordScreen() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [showCustomAlert, setShowCustomAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     type: "info",
@@ -58,10 +56,10 @@ export default function RecoverPasswordScreen() {
 
       setAlertConfig({
         visible: true,
-        type: "info",
+        type: "success",
         title: "TOKEN ENVIADO",
         message:
-          "Se ha enviado un token de 6 caracteres\na tu número de teléfono registrado.",
+          "Se ha enviado un token de 6 caracteres\na tu correo electronico registrado.",
         buttons: [
           {
             text: "CONFIRMAR",
@@ -81,14 +79,25 @@ export default function RecoverPasswordScreen() {
     } catch (error) {
       console.error("[RecoverPassword] Error completo:", error);
       let errorMessage = "Error al procesar la solicitud";
-      if (error.response?.status === 404)
+      if (error.response?.status === 404) {
         errorMessage = "Usuario no registrado en el sistema";
-      if (error.response?.status === 400)
+      }
+      if (error.response?.status === 400) {
         errorMessage = "El número de teléfono no coincide con el registrado.";
-
-      setAlertMessage(errorMessage);
-      setShowCustomAlert(true);
-      setTimeout(() => setShowCustomAlert(false), 5000);
+      }
+      setAlertConfig({
+        visible: true,
+        type: "info",
+        title: "ERROR",
+        message: errorMessage,
+        buttons: [
+          {
+            text: "ENTENDIDO",
+            onPress: () =>
+              setAlertConfig((prev) => ({ ...prev, visible: false })),
+          },
+        ],
+      });
     } finally {
       setIsLoading(false);
     }
@@ -101,24 +110,6 @@ export default function RecoverPasswordScreen() {
     >
       <LogoHeader />
 
-      {showCustomAlert && (
-        <View style={styles.customAlert}>
-          <Icon
-            name="warning"
-            size={20}
-            color="#757777"
-            style={styles.alertIcon}
-          />
-          <Text style={styles.alertText}>{alertMessage}</Text>
-          <Icon
-            name="warning"
-            size={20}
-            color="#656767"
-            style={styles.alertIcon}
-          />
-        </View>
-      )}
-
       <AlertCustom
         visible={alertConfig.visible}
         type={alertConfig.type}
@@ -129,7 +120,7 @@ export default function RecoverPasswordScreen() {
       />
 
       <View style={styles.contenedorPrincipal}>
-      <CustomTitle>RECUPERACIÓN DE CONTRASEÑA</CustomTitle>
+        <CustomTitle>RECUPERACIÓN DE CONTRASEÑA</CustomTitle>
         <Text style={styles.subtitle}>
           Introduce tu cédula de ciudadanía y teléfono, para solicitar un token
           y recuperar tu contraseña.
@@ -192,24 +183,5 @@ const styles = {
   },
   formulario: {
     gap: 20,
-  },
-  customAlert: {
-    backgroundColor: "#FFA7A9",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    flexDirection: "row",
-  },
-  alertText: {
-    color: "#757777",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginHorizontal: 10,
-  },
-  alertIcon: {
-    marginHorizontal: 5,
   },
 };

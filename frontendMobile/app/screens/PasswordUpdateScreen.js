@@ -113,7 +113,7 @@ export default function PasswordUpdateScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         <SafeAreaView style={styles.container}>
-        <CustomTitle>Actualización de Contraseña</CustomTitle>
+          <CustomTitle>Actualización de Contraseña</CustomTitle>
           <CustomInput
             control={control}
             name="current_password"
@@ -122,7 +122,9 @@ export default function PasswordUpdateScreen({ navigation }) {
             error={errors.current_password}
             secureTextEntry={!showCurrentPassword}
             showPasswordToggle
-            onTogglePassword={() => setShowCurrentPassword(!showCurrentPassword)}
+            onTogglePassword={() =>
+              setShowCurrentPassword(!showCurrentPassword)
+            }
           />
           <CustomInput
             control={control}
@@ -142,10 +144,23 @@ export default function PasswordUpdateScreen({ navigation }) {
             error={errors.confirm_password}
             secureTextEntry={!showConfirmPassword}
             showPasswordToggle
-            onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+            onTogglePassword={() =>
+              setShowConfirmPassword(!showConfirmPassword)
+            }
           />
+          <Text style={styles.subtitle}>
+            {"\u2022"} Máximo 20 caracteres, mínimo 8 caracteres.
+            {"\n"}
+            {"\u2022"} Al menos una letra mayúscula.
+            {"\n"}
+            {"\u2022"} Al menos una letra minúscula.
+            {"\n"}
+            {"\u2022"} Al menos un número.
+            {"\n"}
+            {"\u2022"} Al menos un carácter especial (como @, #, $, etc.).
+          </Text>
           <CustomButton
-            title={isLoading ? "Cargando..." : "Actualizar"}
+            title={isLoading ? "CARGANDO..." : "Actualizar"}
             onPress={handleSubmit(onSubmit)}
             disabled={isLoading}
           />
@@ -155,15 +170,16 @@ export default function PasswordUpdateScreen({ navigation }) {
       {/* AlertCustom */}
       <AlertCustom
         visible={showAlert}
-        message={alertMessage} // Pasa el mensaje de la alerta
-        type={alertType} // Pasa el tipo de alerta
+        type={alertType}
+        title={alertType === "success" ? "¡ÉXITO!" : "ERROR"}
+        message={alertMessage}
         buttons={[
           {
             text: "ENTENDIDO",
-            onPress: () => setShowAlert(false), // Cierra la alerta al presionar el botón
+            onPress: () => setShowAlert(false),
           },
         ]}
-        onClose={() => setShowAlert(false)} // Cierra la alerta al presionar fuera de ella
+        onClose={() => setShowAlert(false)}
       />
     </NavbarLayout>
   );
@@ -175,5 +191,12 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     alignItems: "center",
     paddingTop: 20,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#000000",
+    textAlign: "left",
+    marginBottom: 30,
+    lineHeight: 24,
   },
 });

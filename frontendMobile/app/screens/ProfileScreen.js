@@ -11,6 +11,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import NavbarLayout from "../components/NavbarLayout";
 import api from "../services/api";
 import { Image } from "react-native";
+import CustomTitle from "../components/CustomTitle";
+import CustomButton from "../components/CustomButtom";
 
 export default function ProfileScreen({ navigation }) {
   const [userData, setUserData] = useState(null);
@@ -68,8 +70,7 @@ export default function ProfileScreen({ navigation }) {
   return (
     <NavbarLayout navigation={navigation}>
       <SafeAreaView style={styles.container}>
-        <Text style={styles.headerTitle}>Mi perfil</Text>
-        <View style={styles.separator} />
+      <CustomTitle style={{ fontSize: 32 }}>Mi perfil</CustomTitle>        <View style={styles.separator} />
         <View style={styles.profileContainer}>
           <Image
             source={require("../assets/img_M1/icon-profile.png")}
@@ -95,12 +96,12 @@ export default function ProfileScreen({ navigation }) {
             <Text style={styles.infoText}>{userData.email}</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.editButton}
+          <CustomButton
+            title="Editar"
             onPress={() => navigation.navigate("EditarPerfil")}
-          >
-            <Text style={styles.editText}>Editar</Text>
-          </TouchableOpacity>
+            variant="primary"
+            style={{ marginTop: 30 }}
+          />
         </View>
       </SafeAreaView>
     </NavbarLayout>
@@ -113,12 +114,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     alignItems: "center",
     paddingTop: 20,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 8,
   },
   separator: {
     width: "80%",
@@ -154,30 +149,18 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 25,  // Antes era 18, ahora es 25 para mayor separación
+    marginBottom: 25, // Antes era 18, ahora es 25 para mayor separación
     width: "100%",
     justifyContent: "flex-start",
     paddingLeft: 60,
   },
   infoText: {
-  fontSize: 18,  
+    fontSize: 18,
     color: "#000000",
     marginLeft: 10,
     textAlign: "left",
-    flex: 1, 
+    flex: 1,
     marginTop: 5,
-  },
-  editButton: {
-    backgroundColor: "#003F88",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    marginTop: 30,
-  },
-  editText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,

@@ -11,13 +11,13 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/api";
-import { Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { AlertCustom } from "../components/AlertCustom";
 import * as DocumentPicker from "expo-document-picker";
 import CustomTitle from "../components/CustomTitle";
+import CustomButton from '../components/CustomButtom';
+import { LogoHeader } from "../components/LogoHeader";
 
-// Esquema de validación con Yup
 const PreRegisterSchema = yup.object().shape({
   nombre: yup
     .string()
@@ -54,7 +54,7 @@ const PreRegisterSchema = yup.object().shape({
     .matches(/[a-z]/, "Debe contener al menos una minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
     .matches(
-      /[!@#$%^&*()_+-={}|:;"'<>,.?/]/,
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
       "Debe contener un carácter especial"
     )
     .required("Campo obligatorio"),
@@ -73,7 +73,6 @@ export default function PreRegisterScreen() {
   const [documentTypes, setDocumentTypes] = useState([]);
   const [personTypes, setPersonTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [buttonColor, setButtonColor] = useState("#365486"); // Color inicial del botón
   const {
     control,
     handleSubmit,
@@ -147,6 +146,24 @@ export default function PreRegisterScreen() {
   }, []);
 
   const onSubmit = async (data) => {
+    if (selectedFiles.length === 0) {
+      setAlertConfig({
+        visible: true,
+        type: "info", 
+        title: "Documentos requeridos",
+        message: "Debe adjuntar al menos un documento PDF para completar el pre-registro.",
+        buttons: [
+          {
+            text: "Entendido",
+            onPress: () => {
+              setAlertConfig((prev) => ({ ...prev, visible: false }));
+            },
+            style: { backgroundColor: "#365486" },
+          },
+        ],
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await api.post("/users/pre-register", {
@@ -254,13 +271,7 @@ export default function PreRegisterScreen() {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../assets/img_M1/logo.png")}
-          style={styles.logo}
-        />
-        <Text style={styles.aquaSmartText}>AquaSmart</Text>
-      </View>
+<LogoHeader />
       <AlertCustom
         visible={alertConfig.visible}
         type={alertConfig.type}
@@ -676,26 +687,21 @@ export default function PreRegisterScreen() {
             </View>
           )}
           <View style={styles.botonContainer}>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: buttonColor }]}
+            <CustomButton
+              title="Seleccionar archivos"
               onPress={pickDocument}
-              onPressIn={() => setButtonColor("#42A5F5")}
-              onPressOut={() => setButtonColor("#365486")}
-            >
-              <Text style={styles.botonTexto}>Seleccionar archivos</Text>
-            </TouchableOpacity>
+              variant="primary"
+              style={{ width: "48%" }} // Ajustar el ancho del botón
+            />
 
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: buttonColor }]}
+            <CustomButton
+              title={isLoading ? "CARGANDO..." : "REGISTRAR"}
               onPress={handleSubmit(onSubmit)}
+              variant="primary"
               disabled={isLoading}
-              onPressIn={() => setButtonColor("#42A5F5")}
-              onPressOut={() => setButtonColor("#365486")}
-            >
-              <Text style={styles.botonTexto}>
-                {isLoading ? "CARGANDO..." : "REGISTRAR"}
-              </Text>
-            </TouchableOpacity>
+              isLoading={isLoading}
+              style={{ width: "48%" }} // Ajustar el ancho del botón
+            />
           </View>
         </View>
       </View>
@@ -757,28 +763,6 @@ const styles = {
     fontSize: 12,
     marginTop: 4,
   },
-  botonTexto: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginRight: 20,
-  },
-  aquaSmartText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
-  },
   passwordInputContainer: {
     position: "relative",
   },
@@ -792,17 +776,6 @@ const styles = {
     color: "#4299E1",
     fontWeight: "600",
     fontSize: 14,
-  },
-  button: {
-    backgroundColor: "#365486",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
   },
   fileList: {
     marginTop: 10,

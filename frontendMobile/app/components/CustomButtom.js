@@ -16,7 +16,7 @@ export const CustomButton = ({
 }) => {
   // Definición de variantes de color
   const variants = {
-    primary: { bg: "#000000", pressedBg: "#42A5F5" }, // Azul principal
+    primary: { bg: "#365486", pressedBg: "#42A5F5" }, // Azul principal
     secondary: { bg: "#2C7A7B", pressedBg: "#38B2AC" }, // Verde secundario
   };
 
@@ -32,9 +32,9 @@ export const CustomButton = ({
       activeOpacity={0.8} // Efecto de opacidad al presionar
     >
       {isLoading ? (
-        <ActivityIndicator color="#FFFFFF" /> // Indicador de carga
+        <Text style={styles.buttonText}>CARGANDO...</Text>
       ) : (
-        <Text style={styles.buttonText}>{title}</Text> // Texto del botón
+        <Text style={styles.buttonText}>{title}</Text>
       )}
     </TouchableOpacity>
   );
@@ -58,3 +58,4 @@ const styles = StyleSheet.create({
     textTransform: "uppercase", // Texto en mayúsculas
   },
 });
+export default CustomButton;
