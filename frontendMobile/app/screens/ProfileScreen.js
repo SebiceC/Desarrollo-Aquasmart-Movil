@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  ScrollView,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -67,7 +68,11 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <NavbarLayout navigation={navigation}>
-      <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.headerTitle}>Mi perfil</Text>
         <View style={styles.separator} />
         <View style={styles.profileContainer}>
@@ -97,42 +102,51 @@ export default function ProfileScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() => navigation.navigate("EditarPerfil")}
+            onPress={() => navigation.navigate("EditProfile", { userData })}
           >
             <Text style={styles.editText}>Editar</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </ScrollView>
     </NavbarLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 40,
+    allignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "white",
     alignItems: "center",
     paddingTop: 20,
+    paddingBottom: 40,
   },
   headerTitle: {
     fontSize: 32,
     fontWeight: "bold",
     color: "#000",
     marginBottom: 8,
+    textAlign: "center",
   },
   separator: {
     width: "80%",
     height: 1,
     backgroundColor: "#CCC",
     marginBottom: 20,
+    alignSelf: "center",
   },
   profileContainer: {
     backgroundColor: "white",
     borderRadius: 12,
     padding: 24,
-    width: "90%",
+    width: "100%",
     alignItems: "center",
     elevation: 5,
+    marginBottom: 30,
   },
   profileImage: {
     width: 180,
@@ -144,27 +158,29 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#000",
+    textAlign: "center",
   },
   userId: {
     fontSize: 23,
     color: "#666",
     marginBottom: 16,
     marginVertical: 5,
+    textAlign: "center",
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 25,  // Antes era 18, ahora es 25 para mayor separación
+    marginBottom: 25, // Antes era 18, ahora es 25 para mayor separación
     width: "100%",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     paddingLeft: 60,
   },
   infoText: {
-  fontSize: 18,  
+    fontSize: 18,
     color: "#000000",
     marginLeft: 10,
     textAlign: "left",
-    flex: 1, 
+    flex: 1,
     marginTop: 5,
   },
   editButton: {
@@ -178,6 +194,7 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,

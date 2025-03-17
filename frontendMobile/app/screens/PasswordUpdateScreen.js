@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-} from "react-native";
+import { SafeAreaView, StyleSheet, Text, View, ScrollView } from "react-native";
 import NavbarLayout from "../components/NavbarLayout";
 import * as yup from "yup";
 import api from "../services/api";
@@ -13,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CustomInput } from "../components/CustomInput";
 import { CustomButton } from "../components/CustomButtom";
-import { AlertCustom } from "../components/AlertCustom"; 
+import { AlertCustom } from "../components/AlertCustom";
 
 const PasswordUpdateSchema = yup.object().shape({
   current_password: yup.string().required("Campo obligatorio"),
@@ -29,7 +23,10 @@ const PasswordUpdateSchema = yup.object().shape({
       /[!@#$%^&*()_+\-=\{}|\:;"'<>,.?/]/,
       "Debe contener un carácter especial"
     )
-    .notOneOf([yup.ref("current_password")], "Debe ser diferente de la contraseña actual"),
+    .notOneOf(
+      [yup.ref("current_password")],
+      "Debe ser diferente de la contraseña actual"
+    ),
   confirm_password: yup
     .string()
     .oneOf([yup.ref("new_password")], "Las contraseñas no coinciden")
@@ -58,9 +55,9 @@ export default function PasswordUpdateScreen({ navigation }) {
         new_password: data.new_password,
         confirm_password: data.confirm_password,
       });
-  
+
       console.log("[Cambio de contraseña] Respuesta del backend:", response);
-  
+
       if (response.status === 200) {
         // Mostrar alerta de éxito
         setAlertType("success");
@@ -69,11 +66,11 @@ export default function PasswordUpdateScreen({ navigation }) {
       }
     } catch (error) {
       console.error("[Cambio de contraseña] Error:", error.message);
-  
+
       if (error.response && error.response.data) {
         const errorData = error.response.data;
         let errorMessage = "Error al actualizar la contraseña";
-  
+
         if (errorData.detail) {
           errorMessage = errorData.detail;
         } else if (errorData.new_password) {
@@ -83,7 +80,7 @@ export default function PasswordUpdateScreen({ navigation }) {
         } else if (errorData.confirm_password) {
           errorMessage = errorData.confirm_password[0];
         }
-  
+
         // Mostrar alerta de error
         setAlertType("error");
         setAlertMessage(errorMessage);
@@ -102,71 +99,68 @@ export default function PasswordUpdateScreen({ navigation }) {
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
-        <SafeAreaView style={styles.container}>
-          <Text style={styles.headerTitle}>Actualización de Contraseña</Text>
-          <View style={styles.separator} />
-          <View style={styles.profileContainer}>
-            {/* Aquí puedes agregar el contenido del formulario */}
-            <CustomInput
-              control={control}
-              name="current_password"
-              label="Contraseña actual"
-              placeholder="Ingresa tu contraseña"
-              error={errors.current_password}
-              secureTextEntry={!showPassword}
-              showPasswordToggle
-              onTogglePassword={() => setShowPassword(!showPassword)}
-            />
-            <CustomInput
-              control={control}
-              name="new_password"
-              label="Nueva contraseña"
-              placeholder="Ingresa la nueva contraseña"
-              error={errors.new_password}
-              secureTextEntry={!showPassword}
-              showPasswordToggle
-              onTogglePassword={() => setShowPassword(!showPassword)}
-            />
-            <CustomInput
-              control={control}
-              name="confirm_password"
-              label="Confirmar contraseña nueva"
-              placeholder="Confirma la contraseña nueva"
-              error={errors.confirm_password}
-              secureTextEntry={!showPassword}
-              showPasswordToggle
-              onTogglePassword={() => setShowPassword(!showPassword)}
-            />
-          </View>
-        </SafeAreaView>
-        <CustomButton title={"Actualizar"} onPress={handleSubmit(onSubmit)} />
-      </ScrollView>
+        <Text style={styles.headerTitle}>Actualización de Contraseña</Text>
+        <View style={styles.separator} />
+        <View style={styles.profileContainer}>
+          <CustomInput
+            control={control}
+            name="current_password"
+            label="Contraseña actual"
+            placeholder="Ingresa tu contraseña"
+            error={errors.current_password}
+            secureTextEntry={!showPassword}
+            showPasswordToggle
+            onTogglePassword={() => setShowPassword(!showPassword)}
+          />
+          <CustomInput
+            control={control}
+            name="new_password"
+            label="Nueva contraseña"
+            placeholder="Ingresa la nueva contraseña"
+            error={errors.new_password}
+            secureTextEntry={!showPassword}
+            showPasswordToggle
+            onTogglePassword={() => setShowPassword(!showPassword)}
+          />
+          <CustomInput
+            control={control}
+            name="confirm_password"
+            label="Confirmar contraseña nueva"
+            placeholder="Confirma la contraseña nueva"
+            error={errors.confirm_password}
+            secureTextEntry={!showPassword}
+            showPasswordToggle
+            onTogglePassword={() => setShowPassword(!showPassword)}
+          />
+          <CustomButton title={"Actualizar"} onPress={handleSubmit(onSubmit)} />
+        </View>
 
-      <AlertCustom
-      visible={showAlert}
-      type={alertType}
-      message={alertMessage}
-      buttons={[
-        {
-          text: "ENTENDIDO",
-          onPress: () => setShowAlert(false), // Cierra la alerta al presionar el botón
-        },
-      ]}
-      showCloseButton={true}
-      onClose={() => setShowAlert(false)} // Cierra la alerta al presionar el botón de cerrar
-    />
+        <AlertCustom
+          visible={showAlert}
+          type={alertType}
+          message={alertMessage}
+          buttons={[
+            {
+              text: "ENTENDIDO",
+              onPress: () => setShowAlert(false),
+            },
+          ]}
+          showCloseButton={true}
+          onClose={() => setShowAlert(false)}
+        />
+      </ScrollView>
     </NavbarLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: "white",
     alignItems: "center",
-    paddingTop: 20,
+    paddingVertical: 22,
+    paddingHorizontal: 18,
   },
   headerTitle: {
     fontSize: 32,
@@ -184,9 +178,10 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 12,
     padding: 24,
-    width: "90%",
+    width: "100%",
     alignItems: "center",
     elevation: 5,
+    gap: 10,
   },
   profileImage: {
     width: 180,
@@ -249,5 +244,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginTop: 10,
     textAlign: "center",
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "white",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 20,
+    paddingBottom: 20,
   },
 });
