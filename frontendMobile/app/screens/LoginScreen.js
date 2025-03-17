@@ -5,11 +5,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigation } from "@react-navigation/native";
 import { login } from "../services/authService";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import { AlertCustom } from "../components/AlertCustom";
 import { CustomInput } from "../components/CustomInput";
 import { CustomButton } from "../components/CustomButtom";
 import { LogoHeader } from "../components/LogoHeader";
+import CustomTitle from "../components/CustomTitle";
 
 const loginSchema = yup.object().shape({
   document: yup
@@ -35,8 +35,6 @@ export default function LoginScreen() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showCustomAlert, setShowCustomAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     type: "info",
@@ -54,10 +52,10 @@ export default function LoginScreen() {
       if (response.document) {
         setAlertConfig({
           visible: true,
-          type: "info",
+          type: "success",
           title: "TOKEN ENVIADO",
           message:
-            "Se ha enviado un token de 6 caracteres\na tu número de teléfono registrado.",
+            "Se ha enviado un token de 6 caracteres\na tu correo electronico registrado.",
           buttons: [
             {
               text: "CONFIRMAR",
@@ -77,47 +75,54 @@ export default function LoginScreen() {
     } catch (error) {
       console.error("[Login] Error capturado:", error.message);
 
-      let errorMessage = "Credenciales incorrectas";
-      if (error.message === "User not found") {
-        errorMessage = "Usuario no encontrado";
-      } else if (
-        error.message === "Your account is inactive. Please contact support."
-      ) {
-        errorMessage = "Usuario inhabilitado, contacte con soporte";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      setAlertMessage(errorMessage);
-      setShowCustomAlert(true);
-      setTimeout(() => setShowCustomAlert(false), 8000);
+      // Configuración base para el alert
+      const alertBase = {
+        visible: true,
+        type: "error",
+        title: "Error",
+        buttons: [{ text: "ENTENDIDO" }],
+      };
 
+      // Diferentes casos de error
       if (
         error.response?.status === 403 &&
         error.response.data?.error?.detail
       ) {
         setAlertConfig({
-          visible: true,
-          type: "error",
+          ...alertBase,
           message: "Error en el inicio de sesión, ya existe una sesión activa.",
           buttons: [{ text: "VOLVER" }],
         });
       } else if (error.message.startsWith("Último intento")) {
         setAlertConfig({
-          visible: true,
-          type: "warning",
+          ...alertBase,
+          type: "info",
           title: "¡ADVERTENCIA!",
           message: "Último intento antes de bloqueo por 30 minutos",
-          buttons: [{ text: "ENTENDIDO" }],
         });
       } else if (error.message.startsWith("Usuario bloqueado")) {
         setAlertConfig({
-          visible: true,
+          ...alertBase,
           type: "error",
           title: "CUENTA BLOQUEADA",
           message: "Usuario bloqueado por 30 minutos",
-          buttons: [{ text: "ENTENDIDO" }],
+        });
+      } else {
+        let errorMessage = "Credenciales incorrectas";
+        if (error.message === "User not found") {
+          errorMessage = "Usuario no encontrado";
+        } else if (
+          error.message === "Your account is inactive. Please contact support."
+        ) {
+          errorMessage = "Usuario inhabilitado, contacte con soporte";
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        setAlertConfig({
+          ...alertBase,
+          message: errorMessage,
         });
       }
     } finally {
@@ -132,24 +137,6 @@ export default function LoginScreen() {
     >
       <LogoHeader />
 
-      {showCustomAlert && (
-        <View style={styles.customAlert}>
-          <Icon
-            name="warning"
-            size={20}
-            color="#757777"
-            style={styles.alertIcon}
-          />
-          <Text style={styles.alertText}>{alertMessage}</Text>
-          <Icon
-            name="warning"
-            size={20}
-            color="#656767"
-            style={styles.alertIcon}
-          />
-        </View>
-      )}
-
       <AlertCustom
         visible={alertConfig.visible}
         type={alertConfig.type}
@@ -160,8 +147,7 @@ export default function LoginScreen() {
       />
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.titulo}>INICIO DE SESIÓN</Text>
-
+        <CustomTitle>INICIO DE SESIÓN</CustomTitle>
         <View style={styles.formulario}>
           <CustomInput
             control={control}
@@ -223,14 +209,6 @@ const styles = {
     padding: 25,
     elevation: 5,
   },
-  titulo: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#000000",
-    textAlign: "center",
-    marginBottom: 40,
-    textTransform: "uppercase",
-  },
   formulario: {
     gap: 20,
   },
@@ -244,24 +222,5 @@ const styles = {
     fontWeight: "600",
     textAlign: "center",
     textDecorationLine: "underline",
-  },
-  customAlert: {
-    backgroundColor: "#FFA7A9",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    flexDirection: "row",
-  },
-  alertText: {
-    color: "#757777",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginHorizontal: 10,
-  },
-  alertIcon: {
-    marginHorizontal: 5,
   },
 };

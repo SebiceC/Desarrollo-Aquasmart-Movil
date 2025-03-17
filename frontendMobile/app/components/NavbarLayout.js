@@ -87,9 +87,7 @@ const NavbarLayout = ({ children, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header con menú */}
       <View style={styles.header}>
-        {/* Logo y texto centrados */}
         <View style={styles.logoContainer}>
           <Image
             source={require("../assets/img_M1/logo.png")}
@@ -98,7 +96,6 @@ const NavbarLayout = ({ children, navigation }) => {
           <Text style={styles.aquaSmartText}>AquaSmart</Text>
         </View>
 
-        {/* Botón de menú posicionado a la derecha */}
         <TouchableOpacity
           onPress={() => setIsMenuOpen(!isMenuOpen)}
           style={styles.menuButton}
@@ -120,7 +117,6 @@ const NavbarLayout = ({ children, navigation }) => {
               ]}
               onPress={item.action || (() => navigation.navigate(item.title))}
             >
-              {/* Contenedor para alinear ícono, texto y la "X" */}
               <View style={styles.profileContainer}>
                 <MaterialIcons
                   name={item.icon}
@@ -138,7 +134,6 @@ const NavbarLayout = ({ children, navigation }) => {
                 </Text>
               </View>
 
-              {/* Botón de cerrar (solo en "Mi Perfil") */}
               {item.title === "Mi Perfil" && (
                 <TouchableOpacity onPress={() => setIsMenuOpen(false)}>
                   <MaterialIcons name="close" size={40} color="#000" />
@@ -149,7 +144,6 @@ const NavbarLayout = ({ children, navigation }) => {
         </View>
       )}
 
-      {/* Contenido principal */}
       <View style={styles.contentContainer}>{children}</View>
     </SafeAreaView>
   );

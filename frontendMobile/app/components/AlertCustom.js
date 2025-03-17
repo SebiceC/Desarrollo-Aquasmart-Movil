@@ -9,36 +9,29 @@ import {
 
 export const AlertCustom = ({
   visible,
-  type = "info", // 'error' | 'success' | 'warning' | 'info'
+  type = "info", // 'error' | 'success' | 'info'
   title,
   message,
   buttons = [{ text: "ENTENDIDO", onPress: () => {} }],
   animationType = "fade",
-  icon,
   onClose,
-  showCloseButton = false,
 }) => {
   const getStylesByType = () => {
     switch (type) {
       case "error":
         return {
-          backgroundColor: "#FFA7A9",
-          icon: require("../assets/img_M1/error-icon.png"),
+          backgroundColor: "white", // Fondo blanco para errores
+          icon: require("../assets/img_M1/error-icon.png"), // Ícono de error
         };
       case "success":
         return {
-          backgroundColor: "#A9FFB8",
-          icon: require("../assets/img_M1/success-icon.png"),
-        };
-      case "warning":
-        return {
-          backgroundColor: "#FFEBA9",
-          icon: require("../assets/img_M1/warning-icon.png"),
+          backgroundColor: "white", // Fondo blanco para éxito
+          icon: require("../assets/img_M1/success-icon.png"), // Ícono de éxito
         };
       default:
         return {
-          backgroundColor: "white",
-          icon: require("../assets/img_M1/info-icon.png"),
+          backgroundColor: "white", // Fondo blanco por defecto (info)
+          icon: require("../assets/img_M1/info-icon.png"), // Ícono de info
         };
     }
   };
@@ -51,23 +44,17 @@ export const AlertCustom = ({
         <View
           style={[
             styles.alertContainer,
-            { backgroundColor: typeStyles.backgroundColor },
+            { backgroundColor: typeStyles.backgroundColor }, // Aplica el color de fondo
           ]}
         >
-          {showCloseButton && (
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>X</Text>
-            </TouchableOpacity>
-          )}
-
           {/* Título opcional */}
           {title && <Text style={styles.title}>{title}</Text>}
 
-          {/* Icono personalizado */}
-          {icon && <Image source={icon} style={styles.icon} />}
-
           {/* Mensaje principal */}
           <Text style={styles.message}>{message}</Text>
+
+          {/* Icono personalizado */}
+          <Image source={typeStyles.icon} style={styles.icon} />
 
           {/* Contenedor de botones dinámicos */}
           <View
@@ -113,10 +100,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 25,
     alignItems: "center",
+    elevation: 5, // Sombra en Android
+    shadowColor: "#000", // Sombra en iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   icon: {
-    width: 50,
-    height: 50,
+    width: 100,
+    height: 100,
     marginBottom: 15,
   },
   title: {
@@ -124,13 +116,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     color: "#2D2D2D",
+    textAlign: "center", // Centrar el título
   },
   message: {
-    fontSize: 16,
+    fontSize: 20,
     textAlign: "center",
     marginBottom: 25,
     lineHeight: 22,
-    color: "#2D2D2D",
+    color: "#000000",
   },
   buttonsContainer: {
     flexDirection: "row",
@@ -154,16 +147,5 @@ const styles = StyleSheet.create({
   },
   singleButtonContainer: {
     justifyContent: "center", // Centrado para botón único
-  },
-  closeButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    padding: 8,
-  },
-  closeButtonText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#2D2D2D",
   },
 });

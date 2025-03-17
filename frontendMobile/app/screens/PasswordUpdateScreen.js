@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { SafeAreaView, StyleSheet, Text, View, ScrollView } from "react-native";
 import NavbarLayout from "../components/NavbarLayout";
 import * as yup from "yup";
@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CustomInput } from "../components/CustomInput";
 import { CustomButton } from "../components/CustomButtom";
-import { AlertCustom } from "../components/AlertCustom";
+import { AlertCustom } from "../components/AlertCustom"; // Importa el componente AlertCustom
+import CustomTitle from "../components/CustomTitle"; // Importa el componente CustomTitle
 
 const PasswordUpdateSchema = yup.object().shape({
   current_password: yup.string().required("Campo obligatorio"),
@@ -27,6 +28,10 @@ const PasswordUpdateSchema = yup.object().shape({
       [yup.ref("current_password")],
       "Debe ser diferente de la contraseña actual"
     ),
+    .notOneOf(
+      [yup.ref("current_password")],
+      "Debe ser diferente de la contraseña actual"
+    ),
   confirm_password: yup
     .string()
     .oneOf([yup.ref("new_password")], "Las contraseñas no coinciden")
@@ -38,17 +43,26 @@ export default function PasswordUpdateScreen({ navigation }) {
     control,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: yupResolver(PasswordUpdateSchema),
-    defaultValues: { document: "", password: "" },
+    defaultValues: {
+      current_password: "",
+      new_password: "",
+      confirm_password: "",
+    },
   });
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showAlert, setShowAlert] = useState(false); // Controla la visibilidad de la alerta
   const [alertType, setAlertType] = useState("info"); // Tipo de alerta ('error' o 'success')
   const [alertMessage, setAlertMessage] = useState(""); // Mensaje de la alerta
+  const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data) => {
+    setIsLoading(true); // Activar el estado de carga
     try {
       const response = await api.post("/users/change-password", {
         current_password: data.current_password,
@@ -59,17 +73,23 @@ export default function PasswordUpdateScreen({ navigation }) {
       console.log("[Cambio de contraseña] Respuesta del backend:", response);
 
       if (response.status === 200) {
-        // Mostrar alerta de éxito
-        setAlertType("success");
+        setAlertType("success"); // Establece el tipo de alerta como "success"
         setAlertMessage("Contraseña actualizada con éxito");
         setShowAlert(true);
+        reset({
+          current_password: "",
+          new_password: "",
+          confirm_password: "",
+        });
       }
     } catch (error) {
       console.error("[Cambio de contraseña] Error:", error.message);
 
+
       if (error.response && error.response.data) {
         const errorData = error.response.data;
         let errorMessage = "Error al actualizar la contraseña";
+
 
         if (errorData.detail) {
           errorMessage = errorData.detail;
@@ -84,34 +104,35 @@ export default function PasswordUpdateScreen({ navigation }) {
         // Mostrar alerta de error
         setAlertType("error");
         setAlertMessage(errorMessage);
-        setShowAlert(true);
       } else {
-        // Mostrar alerta de error genérico
-        setAlertType("error");
+        setAlertType("error"); // Establece el tipo de alerta como "error"
         setAlertMessage("Error desconocido. Intente nuevamente.");
-        setShowAlert(true);
       }
+
+      setShowAlert(true);
+    } finally {
+      setIsLoading(false); // Desactivar el estado de carga
     }
   };
 
   return (
     <NavbarLayout navigation={navigation}>
       <ScrollView
-        contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.headerTitle}>Actualización de Contraseña</Text>
-        <View style={styles.separator} />
-        <View style={styles.profileContainer}>
+        <SafeAreaView style={styles.container}>
+          <CustomTitle>Actualización de Contraseña</CustomTitle>
           <CustomInput
             control={control}
             name="current_password"
             label="Contraseña actual"
             placeholder="Ingresa tu contraseña"
             error={errors.current_password}
-            secureTextEntry={!showPassword}
+            secureTextEntry={!showCurrentPassword}
             showPasswordToggle
-            onTogglePassword={() => setShowPassword(!showPassword)}
+            onTogglePassword={() =>
+              setShowCurrentPassword(!showCurrentPassword)
+            }
           />
           <CustomInput
             control={control}
@@ -119,9 +140,9 @@ export default function PasswordUpdateScreen({ navigation }) {
             label="Nueva contraseña"
             placeholder="Ingresa la nueva contraseña"
             error={errors.new_password}
-            secureTextEntry={!showPassword}
+            secureTextEntry={!showNewPassword}
             showPasswordToggle
-            onTogglePassword={() => setShowPassword(!showPassword)}
+            onTogglePassword={() => setShowNewPassword(!showNewPassword)}
           />
           <CustomInput
             control={control}
@@ -129,27 +150,45 @@ export default function PasswordUpdateScreen({ navigation }) {
             label="Confirmar contraseña nueva"
             placeholder="Confirma la contraseña nueva"
             error={errors.confirm_password}
-            secureTextEntry={!showPassword}
+            secureTextEntry={!showConfirmPassword}
             showPasswordToggle
-            onTogglePassword={() => setShowPassword(!showPassword)}
+            onTogglePassword={() =>
+              setShowConfirmPassword(!showConfirmPassword)
+            }
           />
-          <CustomButton title={"Actualizar"} onPress={handleSubmit(onSubmit)} />
-        </View>
-
-        <AlertCustom
-          visible={showAlert}
-          type={alertType}
-          message={alertMessage}
-          buttons={[
-            {
-              text: "ENTENDIDO",
-              onPress: () => setShowAlert(false),
-            },
-          ]}
-          showCloseButton={true}
-          onClose={() => setShowAlert(false)}
-        />
+          <Text style={styles.subtitle}>
+            {"\u2022"} Máximo 20 caracteres, mínimo 8 caracteres.
+            {"\n"}
+            {"\u2022"} Al menos una letra mayúscula.
+            {"\n"}
+            {"\u2022"} Al menos una letra minúscula.
+            {"\n"}
+            {"\u2022"} Al menos un número.
+            {"\n"}
+            {"\u2022"} Al menos un carácter especial (como @, #, $, etc.).
+          </Text>
+          <CustomButton
+            title={isLoading ? "CARGANDO..." : "Actualizar"}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isLoading}
+          />
+        </SafeAreaView>
       </ScrollView>
+
+      {/* AlertCustom */}
+      <AlertCustom
+        visible={showAlert}
+        type={alertType}
+        title={alertType === "success" ? "¡ÉXITO!" : "ERROR"}
+        message={alertMessage}
+        buttons={[
+          {
+            text: "ENTENDIDO",
+            onPress: () => setShowAlert(false),
+          },
+        ]}
+        onClose={() => setShowAlert(false)}
+      />
     </NavbarLayout>
   );
 }
@@ -162,88 +201,25 @@ const styles = StyleSheet.create({
     paddingVertical: 22,
     paddingHorizontal: 18,
   },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 8,
-  },
-  separator: {
-    width: "80%",
-    height: 1,
-    backgroundColor: "#CCC",
-    marginBottom: 20,
-  },
-  profileContainer: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    padding: 24,
-    width: "100%",
-    alignItems: "center",
-    elevation: 5,
-    gap: 10,
-  },
-  profileImage: {
-    width: 180,
-    height: 180,
-    borderRadius: 60,
-    marginBottom: 16,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  userId: {
-    fontSize: 23,
-    color: "#666",
-    marginBottom: 16,
-    marginVertical: 5,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 25, // Antes era 18, ahora es 25 para mayor separación
-    width: "100%",
-    justifyContent: "flex-start",
-    paddingLeft: 60,
-  },
-  infoText: {
-    fontSize: 18,
-    color: "#000000",
-    marginLeft: 10,
-    textAlign: "left",
-    flex: 1,
-    marginTop: 5,
-  },
-  editButton: {
-    backgroundColor: "#003F88",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    marginTop: 30,
-  },
-  editText: {
-    color: "#FFF",
+  subtitle: {
     fontSize: 16,
-    fontWeight: "bold",
+    color: "#000000",
+    textAlign: "left",
+    marginBottom: 30,
+    lineHeight: 24,
   },
-  loadingContainer: {
+  safeArea: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "white",
   },
-  errorContainer: {
+  scrollView: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
   },
-  errorText: {
-    color: "#FF3B30",
-    fontSize: 18,
-    marginTop: 10,
-    textAlign: "center",
+  scrollViewContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   safeArea: {
     flex: 1,

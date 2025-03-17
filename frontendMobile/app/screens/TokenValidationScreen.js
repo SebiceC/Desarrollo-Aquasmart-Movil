@@ -1,18 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import api from "../services/api";
-import { Image } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AlertCustom } from "../components/AlertCustom";
+import CustomTitle from "../components/CustomTitle";
+import CustomButton from "../components/CustomButtom";
+import { LogoHeader } from "../components/LogoHeader";
 
 export default function TokenValidationScreen() {
   const navigation = useNavigation();
@@ -22,16 +16,12 @@ export default function TokenValidationScreen() {
   const [token, setToken] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(300);
   const [isResending, setIsResending] = useState(false);
-  const [showCustomAlert, setShowCustomAlert] = useState(false); // Estado para mostrar la alerta personalizada
-  const [alertMessage, setAlertMessage] = useState(""); // Estado para el mensaje de la alerta
-
   const inputRefs = useRef([]);
 
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     type: "success",
     title: "",
-    icon: "",
     message: "",
     buttons: [],
   });
@@ -74,9 +64,8 @@ export default function TokenValidationScreen() {
         } else {
           setAlertConfig({
             visible: true,
-            type: "info",
+            type: "success",
             title: "¡BIENVENIDO!",
-            icon: require("../assets/img_M1/success-icon.png"),
             buttons: [
               {
                 text: "CONTINUAR",
@@ -84,7 +73,6 @@ export default function TokenValidationScreen() {
                   setAlertConfig((prev) => ({ ...prev, visible: false }));
                   navigation.replace("Home");
                 },
-                style: { backgroundColor: "#365486" },
               },
             ],
           });
@@ -94,9 +82,18 @@ export default function TokenValidationScreen() {
       }
     } catch (error) {
       console.error("[Token] Error:", error);
-      setAlertMessage(error.response?.data?.message || "Código incorrecto");
-      setShowCustomAlert(true);
-      setTimeout(() => setShowCustomAlert(false), 5000);
+      setAlertConfig({
+        visible: true,
+        type: "error",
+        title: "ERROR DE VALIDACIÓN",
+        message: error.response?.data?.message || "Código incorrecto",
+        buttons: [
+          {
+            text: "ENTENDIDO",
+            onPress: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+          }
+        ]
+      });
     }
   };
 
@@ -115,7 +112,19 @@ export default function TokenValidationScreen() {
       if (inputRefs.current[0]) {
         inputRefs.current[0].focus(); // Enfoca el primer campo de entrada
       }
-      Alert.alert("Éxito", "Nuevo código enviado");
+      setAlertConfig({
+        visible: true,
+        type: "success",
+        title: "ÉXITO",
+        message: "Nuevo código enviado",
+        buttons: [
+          {
+            text: "ENTENDIDO",
+            onPress: () =>
+              setAlertConfig((prev) => ({ ...prev, visible: false })),
+          },
+        ],
+      });
     } catch (error) {
       console.error("[Token] Error:", error);
       setAlertConfig({
@@ -148,14 +157,7 @@ export default function TokenValidationScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../assets/img_M1/logo.png")}
-          style={styles.logo}
-        />
-        <Text style={styles.aquaSmartText}>AquaSmart</Text>
-      </View>
-
+      <LogoHeader />
       <AlertCustom
         visible={alertConfig.visible}
         type={alertConfig.type}
@@ -167,31 +169,11 @@ export default function TokenValidationScreen() {
       />
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.title}>INGRESO DE TOKEN</Text>
-
+        <CustomTitle>INGRESO DE TOKEN</CustomTitle>
         <Text style={styles.subtitle}>
-          Introduce el token enviado por SMS a tu teléfono. Recuerda que expira
+          Introduce el token enviado por correo electronico. Recuerda que expira
           en 5 minutos.
         </Text>
-
-        {/* Alerta personalizada debajo del título */}
-        {showCustomAlert && (
-          <View style={styles.customAlert}>
-            <Icon
-              name="warning"
-              size={20}
-              color="#757777"
-              style={styles.alertIcon}
-            />
-            <Text style={styles.alertText}>{alertMessage}</Text>
-            <Icon
-              name="warning"
-              size={20}
-              color="#656767"
-              style={styles.alertIcon}
-            />
-          </View>
-        )}
 
         <View style={styles.tokenInputContainer}>
           {token.map((digit, index) => (
@@ -214,23 +196,22 @@ export default function TokenValidationScreen() {
         </Text>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.resendButton}
+          <CustomButton
+            title={isResending ? "CARGANDO..." : "SOLICITAR NUEVO TOKEN"}
             onPress={handleResendToken}
             disabled={isResending}
-          >
-            <Text style={styles.buttonText}>
-              {isResending ? "Enviando..." : "SOLICITAR NUEVO TOKEN"}
-            </Text>
-          </TouchableOpacity>
+            isLoading={isResending}
+            variant="primary"
+            style={{ width: "48%" }}
+          />
 
-          <TouchableOpacity
-            style={styles.button}
+          <CustomButton
+            title="ENVIAR"
             onPress={handleSubmit}
             disabled={token.some((digit) => digit === "")}
-          >
-            <Text style={styles.buttonText}>ENVIAR</Text>
-          </TouchableOpacity>
+            variant="primary"
+            style={{ width: "48%" }}
+          />
         </View>
       </View>
     </View>
@@ -251,13 +232,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 25,
     elevation: 5,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#000000",
   },
   subtitle: {
     fontSize: 16,
@@ -288,70 +262,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
   },
-
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
-  },
-  button: {
-    backgroundColor: "#2D5B7B",
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    flex: 1,
-    marginLeft: 10,
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  resendButton: {
-    backgroundColor: "#2D5B7B",
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    flex: 1,
-    marginRight: 10,
-    justifyContent: "center",
-  },
-
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 40,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginRight: 20,
-  },
-  aquaSmartText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
-  },
-  customAlert: {
-    backgroundColor: "#FFA7A9",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 20,
-    alignItems: "center",
-    justifyContent: "center",
     width: "100%",
-    flexDirection: "row",
-  },
-  alertText: {
-    color: "#757777",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginHorizontal: 10,
-  },
-  alertIcon: {
-    marginHorizontal: 5,
   },
 });

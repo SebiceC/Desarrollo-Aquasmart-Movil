@@ -12,6 +12,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import NavbarLayout from "../components/NavbarLayout";
 import api from "../services/api";
 import { Image } from "react-native";
+import CustomTitle from "../components/CustomTitle";
+import CustomButton from "../components/CustomButtom";
 
 export default function ProfileScreen({ navigation }) {
   const [userData, setUserData] = useState(null);
@@ -73,7 +75,7 @@ export default function ProfileScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.headerTitle}>Mi perfil</Text>
+        <CustomTitle style={{ fontSize: 32 }}>Mi perfil</CustomTitle>{" "}
         <View style={styles.separator} />
         <View style={styles.profileContainer}>
           <Image
@@ -100,12 +102,12 @@ export default function ProfileScreen({ navigation }) {
             <Text style={styles.infoText}>{userData.email}</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => navigation.navigate("EditProfile", { userData })}
-          >
-            <Text style={styles.editText}>Editar</Text>
-          </TouchableOpacity>
+          <CustomButton
+            title="Editar"
+            onPress={() => navigation.navigate("EditarPerfil")}
+            variant="primary"
+            style={{ marginTop: 30 }}
+          />
         </View>
       </ScrollView>
     </NavbarLayout>
@@ -124,13 +126,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 20,
     paddingBottom: 40,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 8,
-    textAlign: "center",
   },
   separator: {
     width: "80%",
@@ -182,19 +177,6 @@ const styles = StyleSheet.create({
     textAlign: "left",
     flex: 1,
     marginTop: 5,
-  },
-  editButton: {
-    backgroundColor: "#003F88",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    marginTop: 30,
-  },
-  editText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,

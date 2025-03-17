@@ -5,11 +5,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import api from "../services/api";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import { AlertCustom } from "../components/AlertCustom";
 import { CustomInput } from "../components/CustomInput";
 import { CustomButton } from "../components/CustomButtom";
 import { LogoHeader } from "../components/LogoHeader";
+import CustomTitle from "../components/CustomTitle";
 
 const PasswordChangeSchema = yup.object().shape({
   new_password: yup
@@ -21,7 +21,7 @@ const PasswordChangeSchema = yup.object().shape({
     .matches(/[a-z]/, "Debe contener al menos una minúscula")
     .matches(/[0-9]/, "Debe contener al menos un número")
     .matches(
-      /[!@#$%^&*()_+\-=\{}|\:;"'<>,.?/]/,
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/,
       "Debe contener un carácter especial"
     ),
   confirmPassword: yup
@@ -50,8 +50,6 @@ export default function PasswordChangeScreen() {
     new: false,
     confirm: false,
   });
-  const [showCustomAlert, setShowCustomAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
     type: "info",
@@ -70,7 +68,7 @@ export default function PasswordChangeScreen() {
 
       setAlertConfig({
         visible: true,
-        type: "info",
+        type: "success",
         title: "CAMBIO DE CONTRASEÑA EXITOSO",
         buttons: [
           {
@@ -86,9 +84,18 @@ export default function PasswordChangeScreen() {
       });
     } catch (error) {
       console.error("[PasswordChange] Error completo:", error);
-      setAlertMessage("¡La contraseña no puede ser igual a la anterior!");
-      setShowCustomAlert(true);
-      setTimeout(() => setShowCustomAlert(false), 7000);
+      setAlertConfig({
+        visible: true,
+        type: "info",
+        title: "Error",
+        message: "¡La contraseña no puede ser igual a la actual!",
+        buttons: [
+          {
+            text: "ENTENDIDO",
+            onPress: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+          }
+        ]
+      });
     } finally {
       setIsLoading(false);
     }
@@ -101,24 +108,17 @@ export default function PasswordChangeScreen() {
     >
       <LogoHeader />
 
-      {showCustomAlert && (
-        <View style={styles.customAlert}>
-          <Icon name="warning" size={20} color="#757777" />
-          <Text style={styles.alertText}>{alertMessage}</Text>
-          <Icon name="warning" size={20} color="#757777" />
-        </View>
-      )}
-
       <AlertCustom
         visible={alertConfig.visible}
         type={alertConfig.type}
         title={alertConfig.title}
+        message={alertConfig.message}
         buttons={alertConfig.buttons}
         onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
       />
 
       <View style={styles.contenedorPrincipal}>
-        <Text style={styles.titulo}>CAMBIO DE CONTRASEÑA</Text>
+      <CustomTitle>CAMBIO DE CONTRASEÑA</CustomTitle>
 
         <View style={styles.formulario}>
           <CustomInput
@@ -187,14 +187,6 @@ const styles = {
     padding: 25,
     elevation: 5,
   },
-  titulo: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#000000",
-    textAlign: "center",
-    marginBottom: 40,
-    textTransform: "uppercase",
-  },
   subtitle: {
     fontSize: 16,
     color: "#000000",
@@ -204,21 +196,5 @@ const styles = {
   },
   formulario: {
     gap: 20,
-  },
-  customAlert: {
-    backgroundColor: "#FFA7A9",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    flexDirection: "row",
-  },
-  alertText: {
-    color: "#757777",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginHorizontal: 10,
   },
 };
