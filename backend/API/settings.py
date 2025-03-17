@@ -299,3 +299,7 @@ GOOGLE_DRIVE_STORAGE_MEDIA_ROOT = 'Prueba'
 
 # Configuración de Django Storages
 DEFAULT_FILE_STORAGE = 'storages.backends.google_drive.GoogleDriveStorage'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]

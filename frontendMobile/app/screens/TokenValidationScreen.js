@@ -90,9 +90,10 @@ export default function TokenValidationScreen() {
         buttons: [
           {
             text: "ENTENDIDO",
-            onPress: () => setAlertConfig(prev => ({ ...prev, visible: false })),
-          }
-        ]
+            onPress: () =>
+              setAlertConfig((prev) => ({ ...prev, visible: false })),
+          },
+        ],
       });
     }
   };
@@ -147,11 +148,33 @@ export default function TokenValidationScreen() {
 
   const handleChange = (text, index) => {
     const updatedToken = [...token];
-    updatedToken[index] = text.slice(0, 1);
-    setToken(updatedToken);
 
-    if (text.length === 1 && index < 5) {
-      inputRefs.current[index + 1].focus();
+    // Si es un número nuevo, reemplaza el valor actual
+    if (text.length === 1) {
+      updatedToken[index] = text;
+      setToken(updatedToken);
+      // Mover al siguiente input si no es el último
+      if (index < 5) {
+        inputRefs.current[index + 1].focus();
+      }
+    }
+  };
+
+  // Agregar esta nueva función para manejar el borrado
+  const handleKeyPress = (e, index) => {
+    if (e.nativeEvent.key === "Backspace") {
+      const updatedToken = [...token];
+
+      // Si el campo actual está vacío, borra el anterior y mueve el foco
+      if (token[index] === "" && index > 0) {
+        updatedToken[index - 1] = "";
+        setToken(updatedToken);
+        inputRefs.current[index - 1].focus();
+      } else {
+        // Si el campo actual tiene un valor, lo borra
+        updatedToken[index] = "";
+        setToken(updatedToken);
+      }
     }
   };
 
@@ -184,6 +207,7 @@ export default function TokenValidationScreen() {
               maxLength={1}
               value={digit}
               onChangeText={(text) => handleChange(text, index)}
+              onKeyPress={(e) => handleKeyPress(e, index)}
               ref={(ref) => (inputRefs.current[index] = ref)}
               textAlign="center"
             />

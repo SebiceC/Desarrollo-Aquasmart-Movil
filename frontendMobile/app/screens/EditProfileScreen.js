@@ -98,7 +98,24 @@ export default function EditProfileScreen({ navigation, route }) {
             errorMessage = "No autorizado. Por favor inicia sesión nuevamente";
             break;
           case 400:
-            errorMessage = error.response.data.message || "Datos inválidos";
+            if (
+              error.response.data.message &&
+              error.response.data.message.includes("límite")
+            ) {
+              setAlertConfig({
+                type: "error",
+                title: "¡Error!",
+                message: error.response.data.message,
+                buttons: [
+                  { text: "Entendido", onPress: () => setAlertVisible(false) },
+                ],
+              });
+              setAlertVisible(true);
+              return;
+            }
+            errorMessage =
+              error.response.data.message ||
+              "Has alcanzado el límite de 3 actualizaciones esta semana. Podrás actualizar nuevamente la próxima semana";
             break;
           default:
             errorMessage = "Error del servidor. Intenta más tarde";
@@ -106,8 +123,8 @@ export default function EditProfileScreen({ navigation, route }) {
       }
 
       setAlertConfig({
-        type: "info",
-        title: "Error",
+        type: "error",
+        title: "¡Error!",
         message: errorMessage,
         buttons: [{ text: "Entendido", onPress: () => setAlertVisible(false) }],
       });

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   ScrollView,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -75,7 +73,7 @@ export default function ProfileScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <CustomTitle style={{ fontSize: 32 }}>Mi perfil</CustomTitle>{" "}
+        <CustomTitle style={{ fontSize: 32 }}>Mi perfil</CustomTitle>
         <View style={styles.separator} />
         <View style={styles.profileContainer}>
           <Image
@@ -104,7 +102,7 @@ export default function ProfileScreen({ navigation }) {
 
           <CustomButton
             title="Editar"
-            onPress={() => navigation.navigate("EditarPerfil")}
+            onPress={() => navigation.navigate("EditProfile", { userData })}
             variant="primary"
             style={{ marginTop: 30 }}
           />

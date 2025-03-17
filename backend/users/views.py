@@ -9,6 +9,9 @@ from .validate import validate_user_exist
 from API.google.google_drive import upload_to_drive
 import os
 from django.conf import settings
+from .permissions import PuedeCambiarIsActive,CanRegister,CanAddDocumentType
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import serializers
 @extend_schema_view(
     post=extend_schema(
         summary="Crear un nuevo usuario",
@@ -87,7 +90,7 @@ class DocumentTypeView(generics.CreateAPIView):
 
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
-    permission_classes = [IsAdminUser, IsAuthenticated]
+    permission_classes = [CanAddDocumentType, IsAuthenticated]
 
 class DocumentTypeListView(generics.ListAPIView):
     queryset = DocumentType.objects.all()
@@ -163,8 +166,8 @@ class UserRegisterAPIView(APIView):
 
     Solo los administradores autenticados pueden acceder a esta vista.
     """
-
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated,CanRegister]
 
     def patch(self, request, document):
         """
@@ -197,7 +200,7 @@ class UserInactiveAPIView(APIView):
     Solo los administradores autenticados pueden acceder a esta vista.
     """
 
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, PuedeCambiarIsActive]
 
     def patch(self, request, document):
         """
@@ -229,7 +232,7 @@ class UserActivateAPIView(APIView):
     Solo los administradores autenticados pueden acceder a esta vista.
     """
 
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, PuedeCambiarIsActive]
 
     def patch(self, request, document):
         """
@@ -344,34 +347,19 @@ class UserProfilelView(generics.RetrieveAPIView):
     
 class UserProfileUpdateView(generics.UpdateAPIView):
     serializer_class = UserProfileUpdateSerializer
-    permission_classes = [IsAuthenticated]
+    queryset = CustomUser.objects.all()
 
     def get_object(self):
-        """Retorna el usuario autenticado para actualizar su perfil."""
-        return self.request.user
+        """Obtiene el usuario actual."""
+        return self.request.user  # Asume que el usuario está autenticado
 
     def update(self, request, *args, **kwargs):
-        """Personaliza la respuesta dependiendo de los campos actualizados."""
-        partial = kwargs.pop('partial', True)  # 🔹 Permite actualizaciones parciales
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        
-        if serializer.is_valid():
-            serializer.save()
-            
-            # 🔹 Detecta qué campo fue actualizado
-            updated_fields = []
-            if 'email' in request.data:
-                updated_fields.append("correo electrónico")
-            if 'phone' in request.data:
-                updated_fields.append("número de teléfono")
-
-            # 🔹 Construye el mensaje de respuesta dinámico
-            if updated_fields:
-                message = f"Se ha actualizado tu {' y '.join(updated_fields)} correctamente."
-            else:
-                message = "Datos actualizados correctamente."
-
-            return Response({"message": message}, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        """Maneja la actualización del perfil del usuario."""
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except serializers.ValidationError as e:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SafeAreaView, StyleSheet, Text, View, ScrollView } from "react-native";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
 import NavbarLayout from "../components/NavbarLayout";
 import * as yup from "yup";
 import api from "../services/api";
@@ -112,42 +112,47 @@ export default function PasswordUpdateScreen({ navigation }) {
   return (
     <NavbarLayout navigation={navigation}>
       <ScrollView keyboardShouldPersistTaps="handled">
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
           <CustomTitle>Actualización de Contraseña</CustomTitle>
-          <CustomInput
-            control={control}
-            name="current_password"
-            label="Contraseña actual"
-            placeholder="Ingresa tu contraseña"
-            error={errors.current_password}
-            secureTextEntry={!showCurrentPassword}
-            showPasswordToggle
-            onTogglePassword={() =>
-              setShowCurrentPassword(!showCurrentPassword)
-            }
-          />
-          <CustomInput
-            control={control}
-            name="new_password"
-            label="Nueva contraseña"
-            placeholder="Ingresa la nueva contraseña"
-            error={errors.new_password}
-            secureTextEntry={!showNewPassword}
-            showPasswordToggle
-            onTogglePassword={() => setShowNewPassword(!showNewPassword)}
-          />
-          <CustomInput
-            control={control}
-            name="confirm_password"
-            label="Confirmar contraseña nueva"
-            placeholder="Confirma la contraseña nueva"
-            error={errors.confirm_password}
-            secureTextEntry={!showConfirmPassword}
-            showPasswordToggle
-            onTogglePassword={() =>
-              setShowConfirmPassword(!showConfirmPassword)
-            }
-          />
+          <View style={{ width: "90%", maxWidth: 400 }}>
+            <CustomInput
+              control={control}
+              name="current_password"
+              label="Contraseña actual"
+              placeholder="Ingresa tu contraseña"
+              error={errors.current_password}
+              secureTextEntry={!showCurrentPassword}
+              showPasswordToggle
+              onTogglePassword={() =>
+                setShowCurrentPassword(!showCurrentPassword)
+              }
+              style={styles.inputContainer}
+            />
+            <CustomInput
+              control={control}
+              name="new_password"
+              label="Nueva contraseña"
+              placeholder="Ingresa la nueva contraseña"
+              error={errors.new_password}
+              secureTextEntry={!showNewPassword}
+              showPasswordToggle
+              onTogglePassword={() => setShowNewPassword(!showNewPassword)}
+              style={styles.inputContainer}
+            />
+            <CustomInput
+              control={control}
+              name="confirm_password"
+              label="Confirmar contraseña nueva"
+              placeholder="Confirma la contraseña nueva"
+              error={errors.confirm_password}
+              secureTextEntry={!showConfirmPassword}
+              showPasswordToggle
+              onTogglePassword={() =>
+                setShowConfirmPassword(!showConfirmPassword)
+              }
+              style={styles.inputContainer}
+            />
+          </View>
           <Text style={styles.subtitle}>
             {"\u2022"} Máximo 20 caracteres, mínimo 8 caracteres.
             {"\n"}
@@ -164,7 +169,7 @@ export default function PasswordUpdateScreen({ navigation }) {
             onPress={handleSubmit(onSubmit)}
             disabled={isLoading}
           />
-        </SafeAreaView>
+        </View>
       </ScrollView>
 
       {/* AlertCustom */}
@@ -192,6 +197,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 22,
     paddingHorizontal: 18,
+    width: "100%",
   },
   subtitle: {
     fontSize: 16,
@@ -200,18 +206,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     lineHeight: 24,
   },
-  safeArea: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 20,
+  inputContainer: {
+    width: "100%",
   },
   safeArea: {
     flex: 1,
